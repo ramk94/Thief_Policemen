@@ -4,8 +4,8 @@ from strategy import Strategy
 from graph_builder import GraphBuilder
 from control_system import Controller
 
-weight_path = ''
-config_path = ''
+WEIGHT_PATH = ''
+CONFIG_PATH = ''
 
 
 class Game:
@@ -56,7 +56,7 @@ class Game:
 
 
 if __name__ == '__main__':
-    game = Game(weight_path, config_path)
+    game = Game(WEIGHT_PATH, CONFIG_PATH)
     while not game.is_over():
         game.forward()
     game.report()
