@@ -18,8 +18,8 @@ if __name__ == '__main__':
     while True:
         image = get_image()
         object_list = detector.detect_objects(image)
-        graph = graph_builder.build(object_list)
-        instructions = strategy.get_next_steps(graph)
+        graph, objects_on_graph = graph_builder.build(object_list)
+        instructions = strategy.get_next_steps(graph, objects_on_graph)
         control_signals = controller.calculate_control_signals(
             centers, object_list, instructions)
         controller.move_robots(control_signals)
