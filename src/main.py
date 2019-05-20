@@ -7,19 +7,56 @@ from control_system import Controller
 weight_path = ''
 config_path = ''
 
-if __name__ == '__main__':
-    gaming_board_image = get_image()
-    detector = Detector()
-    detector.load(weight_path, config_path)
-    centers = detector.detect_gaming_board(gaming_board_image)
-    graph_builder = GraphBuilder(centers)
-    strategy = Strategy()
-    controller = Controller()
-    while True:
+
+class Game:
+    """
+    """
+
+    def __init__(self, weight_path, config_path):
+        self.gaming_board_image = get_image()
+
+        self.detector = Detector()
+        detector.load(weight_path, config_path)
+
+        self.centers = detector.detect_gaming_board(gaming_board_image)
+
+        self.graph_builder = GraphBuilder(self.centers)
+
+        self.strategy = Strategy()
+
+        self.controller = Controller()
+
+    def is_over(self):
+        """
+        """
+        return False
+
+    def forward(self):
+        """
+        """
         image = get_image()
-        object_list = detector.detect_objects(image)
-        graph, objects_on_graph = graph_builder.build(object_list)
-        instructions = strategy.get_next_steps(graph, objects_on_graph)
-        control_signals = controller.calculate_control_signals(
-            centers, object_list, instructions)
-        controller.move_robots(control_signals)
+
+        object_list = self.detector.detect_objects(image)
+
+        graph, objects_on_graph = self.graph_builder.build(object_list)
+
+        instructions = self.strategy.get_next_steps(graph, objects_on_graph)
+
+        while not self.controller.is_finished(centers, object_list, instructions):
+            control_signals = self.controller.calculate_control_signals(
+                centers, object_list, instructions)
+            self.controller.move_robots(control_signals)
+
+            image = get_image()
+            object_list = self.detector.detect_objects(image)
+
+    def report(self):
+        """
+        """
+
+
+if __name__ == '__main__':
+    game = Game(weight_path, config_path)
+    while not game.is_over():
+        game.forward()
+    game.report()
