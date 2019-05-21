@@ -1,17 +1,33 @@
 class Detector:
     """
-    YOLO detector
+    Object detector based on YOLO network.
     """
 
     def load(self, weight_path, config_path):
         """
-        load YOLO network weights and config files
+        Load YOLO network weights and config files
+
+        Parameters
+        ----------
+        weight_path: str
+            file path of YOLOv3 network weights
+        config_path: str
+            file path of YOLOv3 network configurations
         """
 
     def detect_objects(self, image):
         """
-        input: image
-        output: objects' relative locations, relative sizes and categories
+        Detect robots and return an object list.
+
+        Parameters
+        ----------
+        image: numpy array
+            an image consists of the gameing board and multiple robots
+
+        Returns
+        -------
+        object_list: dict
+            objects' relative locations, relative sizes and categories
         """
         object_list = {
             'thief': {
@@ -31,8 +47,17 @@ class Detector:
 
     def detect_gaming_board(self, image):
         """
-        input: image
-        output: center relative coordinate of triangles on the gaming board
+        Analysis the gaming board image to obtain centers of triangles.
+
+        Parameters
+        ----------
+        image: numpy array
+            an image consists of the gaming board(may not contains robots)
+
+        Returns
+        -------
+        centers: list
+            relative coordinates of triangles on the gaming board
         """
         centers = [
             (0.1, 0.6),
