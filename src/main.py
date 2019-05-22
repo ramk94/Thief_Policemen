@@ -4,8 +4,9 @@ from strategy import Strategy
 from graph_builder import GraphBuilder
 from control_system import Controller
 
-WEIGHT_PATH = ''
-CONFIG_PATH = ''
+WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
+NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
+OBJECT_CONFIG_PATH = '../cfg/custom.data'
 
 
 class Game:
@@ -13,7 +14,7 @@ class Game:
     Each game is an instance of class Game.
     """
 
-    def __init__(self, weight_path, config_path):
+    def __init__(self, weight_path, network_config_path, object_config_path):
         """
         Load necessary modules and files.
 
@@ -26,11 +27,11 @@ class Game:
         """
         # construct the object detector
         self.detector = Detector()
-        detector.load(weight_path, config_path)
+        self.detector.load(weight_path, network_config_path, object_config_path)
 
         # load gaming board image and get centers' coordinates of triangles
         self.gaming_board_image = get_image()
-        self.centers = detector.detect_gaming_board(gaming_board_image)
+        self.centers = self.detector.detect_gaming_board(self.gaming_board_image)
 
         # construct the graph builder
         self.graph_builder = GraphBuilder(self.centers)
@@ -68,10 +69,10 @@ class Game:
         instructions = self.strategy.get_next_steps(graph, objects_on_graph)
 
         # move robots until they reach the right positions
-        while not self.controller.is_finished(centers, object_list, instructions):
+        while not self.controller.is_finished(self.centers, object_list, instructions):
             # calculate control signals
             control_signals = self.controller.calculate_control_signals(
-                centers, object_list, instructions)
+                self.centers, object_list, instructions)
             # move robots
             self.controller.move_robots(control_signals)
 
@@ -94,12 +95,12 @@ class Game:
 
 if __name__ == '__main__':
     # construct a game
-    game = Game(WEIGHT_PATH, CONFIG_PATH)
+    game = Game(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
 
     # keep running until the game is over
     while not game.is_over():
         game.forward()
-    
+
     # obtain and print the game report
     report = game.get_report()
     print(report)
