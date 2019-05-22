@@ -33,7 +33,7 @@ class GraphBuilder:
         objects_on_graph: dict
             a dict which indicates robots' locations on the graph
         """
-        num_nodes = len(centers)
+        num_nodes = len(self.centers)
         graph = np.zeros((num_nodes, num_nodes), dtype=np.int64)
         objects_on_graph = {
             'thief': 3,

@@ -26,8 +26,7 @@ class Game:
             file path of YOLOv3 network configurations
         """
         # construct the object detector
-        self.detector = Detector()
-        self.detector.load(weight_path, network_config_path, object_config_path)
+        self.detector = Detector(weight_path, network_config_path, object_config_path)
 
         # load gaming board image and get centers' coordinates of triangles
         self.gaming_board_image = get_image()
