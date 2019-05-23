@@ -2,7 +2,6 @@ import darknet as dn
 import logging
 import cv2
 
-dn.set_gpu(0)
 logger = logging.getLogger(__name__)
 
 
@@ -43,6 +42,14 @@ class Detector:
         -------
         object_list: dict
             objects' relative locations, relative sizes and categories
+            example:
+            {
+                "thief":{
+                    "confidence":0.99,
+                    "center":(0.16,0.37), # (width,height)
+                    "size":(0.21,0.25), # (width,height)
+                }
+            }
         """
         im = self.convert_image(image)
         results = dn.detect_image(self.net, self.meta, im)
