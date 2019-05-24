@@ -48,13 +48,13 @@ class GraphBuilder:
         objects_on_graph: dict
             a dict which indicates robots' locations on the graph
             example:
-                Assume thief is at node #3, policeman1 is at node 7 and policeman2 is at node 9, then this dict may like
+                Assume thief is at node #3, policeman1 is at node #7 and policeman2 is at node #9, then this dict may like
                 the dict below.
                 {
-            "thief:: 3,
-            "policeman1": 7,
-            "policeman2": 9
-        }
+                    "thief": 3,
+                    "policeman1": 7,
+                    "policeman2": 9
+                }
         """
         example = [
             [0, 0, 1, 0, 0, 0, 0, 0, 0],
