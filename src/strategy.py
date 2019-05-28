@@ -29,7 +29,7 @@ class Strategy:
             item_index_2 = np.where(graph[:, objects_on_graph[object] - 1] == 1)
             choices = list(set(item_index_1[0]) | set(item_index_2[0]))
             next_step = random.choice(choices)
-            instructions[object] = [objects_on_graph[object], next_step]
+            instructions[object] = [objects_on_graph[object], next_step + 1]
         #instructions = {
         #    'thief': (3, 4),
         #    'policeman1': (7, 6),
@@ -53,7 +53,7 @@ example = [
 graph = np.array(example, dtype=np.int64)
 objects_on_graph = {
     'thief': 3,
-    'policeman1': 7,
+    'policeman1': 4,
     'policeman2': 9
 }
 S1 = Strategy()
