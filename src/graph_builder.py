@@ -32,8 +32,31 @@ class GraphBuilder:
         ----------
         graph: numpy array
             N * N matrix which describes a graph
+            example:
+                Assume we have nine nodes on the gaming board, and we already know the center coordinate of each node.
+                Then an output graph(numpy array) format may like the array below, and you can find the image of this
+                example in Thief_Policemen/resources/examples/gaming_board_graph.JPG
+                [  # 1 2 3 4 5 6 7 8 9
+                    [0,0,1,0,0,0,0,0,0],
+                    [0,0,1,0,0,1,0,0,0],
+                    [1,1,0,1,0,0,0,0,0],
+                    [0,0,1,0,0,0,0,1,0],
+                    [0,0,0,0,0,1,0,0,0],
+                    [0,1,0,0,1,0,1,0,0],
+                    [0,0,0,0,0,1,0,1,0],
+                    [0,0,0,1,0,0,1,0,1],
+                    [0,0,0,0,0,0,0,1,0]
+                ]
         objects_on_graph: dict
             a dict which indicates robots' locations on the graph
+            example:
+                Assume thief is at node #3, policeman1 is at node #7 and policeman2 is at node #9, then this dict may like
+                the dict below.
+                {
+                    "thief": 3,
+                    "policeman1": 7,
+                    "policeman2": 9
+                }
         """
  
         sample_graph = [
