@@ -128,11 +128,9 @@ class GraphBuilder:
     def objects_ongraph(self):
         objects_on_graph = {}
         for key,value in self.object_list.items():
-            #print(key)
-            if key == "thief" or key == "police1" or key == "police2":
-                current_val = value["center"];
-                current_center = self.return_current_center(current_val[0],current_val[1]);
-                objects_on_graph[key]=self.center_dict[current_center];
+            current_val = value["center"];
+            current_center = self.return_current_center(current_val[0],current_val[1]);
+            objects_on_graph[key]=self.center_dict[current_center];
         return objects_on_graph;
 
 
