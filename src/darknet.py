@@ -32,7 +32,7 @@ import math
 import random
 import os
 import numpy as np
-
+import ctypes
 
 def sample(probs):
     s = sum(probs)
@@ -86,7 +86,7 @@ if os.name == "nt":
     cwd = os.path.dirname(__file__)
     os.environ['PATH'] = cwd + ';' + os.environ['PATH']
     winGPUdll = os.path.join(cwd, "yolo_cpp_dll.dll")
-    winNoGPUdll = os.path.join(cwd, "yolo_cpp_dll_nogpu.dll")
+    winNoGPUdll = os.path.join(cwd, "yolo_cpp_dll_no_gpu.dll")
     envKeys = list()
     for k, v in os.environ.items():
         envKeys.append(k)
@@ -117,6 +117,7 @@ if os.name == "nt":
         hasGPU = False
         if os.path.exists(winNoGPUdll):
             lib = CDLL(winNoGPUdll, RTLD_GLOBAL)
+            # lib =  ctypes.windll.LoadLibrary(winNoGPUdll)
             print("Notice: CPU-only mode")
         else:
             # Try the other way, in case no_gpu was
