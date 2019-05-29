@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 
 class GraphBuilder:
@@ -16,6 +17,7 @@ class GraphBuilder:
             centers' coordinates of triangles on the gaming board
         """
         self.centers = centers
+        self.center_dict=self.center_info();
 
     def build(self, object_list):
         """
@@ -51,39 +53,63 @@ class GraphBuilder:
         num_nodes = len(self.centers)
         assert num_nodes == graph.shape[0] and num_nodes == graph.shape[1]
 
-        #objects_on_graph = {}
-
-        #for key,value in self.object_list.items():
-        #    if value[2] !=None:
-        #        objects_on_graph[value[2]]=key;
-        self.objects_on_graph = self.update_objects_on_graph()
+        self.objects_on_graph = self.objects_ongraph()
 
         return graph, self.objects_on_graph
 
-    #Update if the objects have moved from one location to the other
-    #Need old node and current node to update the information
-    #Update the size of the object, thief, police have different sizes
-    def update_objects(self,old_node, new_node, new_object,new_size):
-        self.object_list[old_node][2]=None
-        self.object_list[new_node][2]=new_object
-        self.object_list[old_node][1]=(None,None);
-        self.object_list[new_node][1]=(new_size);
-        self.objects_on_graph = self.update_objects_on_graph()
+    
+    #Function that returns the current center object
+    #Uses euclidian distance formula to make the prediction of the object current location
+    def return_current_center(self,p2,q2):
+        closest = {};
+        smallest = 0;
+        for center in self.centers:
+            q1 = center[1];
+            p1 = center[0];
+            smallest = math.sqrt((q2-q1)**2 + (p2-p1)**2)
+            closest[smallest] = (p1,q1);
+
+        smallest = min(closest.keys());
+		
+        #objects_on_graph = {}
+        ''' Example
+        object_list{
+                    "thief":{
+                              "center":(0.16.0.37)
+                            },
+                    "police1":{
+                            {
+                              "center": (0.2,0.4)
+                            }
+                    "police2":{
+                              "center": (0.4,0.5)
+                              }
+                   }
+        '''
+        return closest[smallest];
 
 
-    def print_objectlist(self):
-        for key,val in self.object_list.items():
-            print("\nNode: ",key)
-            print("Center information: ",val[0])
-            print("Size information  : ",val[1])
-            print("Object on graph   : ",val[2])
-        print("\nObjects on Graph after the update: ",self.objects_on_graph);
+   
+    #From the original center info, put them in dictionary for future lookup
+    def center_info(self):
+        center_dict = {}
+        i = 1;
+        for val in self.centers: 
+            center_dict[val] = i;
+            i = i +1;
 
-    def update_objects_on_graph(self):
+        return center_dict;
+            
+
+    #Function that returns a dictionary of objects that are currently occupying the space
+    def objects_ongraph(self):
         objects_on_graph = {}
         for key,value in self.object_list.items():
-            if value[2] !=None:
-                objects_on_graph[value[2]]=key;
+            #print(key)
+            if key == "thief" or key == "police1" or key == "police2":
+                current_val = value["center"];
+                current_center = self.return_current_center(current_val[0],current_val[1]);
+                objects_on_graph[key]=self.center_dict[current_center];
         return objects_on_graph;
 
 
