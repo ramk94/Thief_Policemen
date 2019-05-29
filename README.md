@@ -1,2 +1,8 @@
 # Thief_Policemen
 Robotics Project- 2 Policemen chasing a thief
+
+# Authors
+1. Ram Bhattarai
+2. Wubing Sheng
+3. Zhe Lu
+4. Bliss Brass
