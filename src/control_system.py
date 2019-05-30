@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Controller:
     """
     Control system is the most important part of our project.
@@ -69,5 +72,14 @@ class Controller:
         is_done: bool
             True if all robots are at correct locations, otherwise False
         """
+        threshold = 0.05
         is_done = True
+        for key, value in object_list:
+            current_center = np.array(value['center'])
+            target = instructions[key][1]
+            target_center = np.array(centers[target-1])
+            if np.linalg.norm(current_center-target_center) <= threshold:
+                logger.info('{0} has moved to node {1}.'.format(key, target))
+            else:
+                is_done = False
         return is_done
