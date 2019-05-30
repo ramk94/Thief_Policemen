@@ -82,4 +82,5 @@ class Controller:
                 logger.info('{0} has moved to node {1}.'.format(key, target))
             else:
                 is_done = False
+                logger.info('{0} has not moved to node {1}.'.format(key, target))
         return is_done
