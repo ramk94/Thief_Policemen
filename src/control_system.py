@@ -50,20 +50,23 @@ class Controller:
 
             # calculate the angle between centers
             delta = next_center - current_center
-            cos_theta = (base_unit_vector.T @ delta) / np.linalg.norm(delta)
-            theta = np.arccos(cos_theta)
+            dot = np.dot(base_unit_vector.T, delta)
+            det = base_unit_vector[0] * delta[1] - base_unit_vector[1] * delta[0]
+            theta = np.arctan2(det, dot)
 
             # calculate the angle between orientations
-            alpha = np.arccos(base_unit_vector.T @ current_direction)
+            dot = np.dot(base_unit_vector.T, current_direction)
+            det = base_unit_vector[0] * current_direction[1] - base_unit_vector[1] * current_direction[0]
+            alpha = np.arctan2(det, dot)
 
             # calculate rotate angle
-            gamma = (alpha-theta)/np.pi*360
+            gamma = (theta - alpha) * 180 /np.pi
 
             # construct rotate signal
             signals.append({
                 'name': key,
                 'type': 'rotate',
-                'param': gamma
+                'param': gamma.item()
             })
 
             # construct move signal
