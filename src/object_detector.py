@@ -85,7 +85,7 @@ class Detector:
             }
         return object_list
 
-    def detect_gaming_board(self, image, save=True):
+    def detect_gaming_board(self, image):
         """
         Analysis the gaming board image to obtain centers of triangles.
 
@@ -107,7 +107,12 @@ class Detector:
         cv2.imshow(window_name, image)
         if cv2.waitKey(0) & 0xFF == ord('q'):
             cv2.destroyWindow(window_name)
-        if save:
+        if not centers:
+            with open('centers.txt', encoding='utf-8', mode='r') as file:
+                for line in file:
+                    center = tuple(map(float, line.strip().split(' ')))
+                    centers.append(center)
+        else:
             with open('centers.txt', encoding='utf-8', mode='w') as file:
                 for center in centers:
                     file.write('{width} {height}\n'.format(
