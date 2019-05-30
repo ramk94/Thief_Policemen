@@ -54,7 +54,7 @@ class Controller:
             control signals based on instructions
         """
 
-    def is_finished(self, centers, object_list, instructions):
+    def is_finished(self, centers, object_list, instructions, threshold=0.05):
         """
         Check if the movement is done.
 
@@ -72,7 +72,6 @@ class Controller:
         is_done: bool
             True if all robots are at correct locations, otherwise False
         """
-        threshold = 0.05
         is_done = True
         for key, value in object_list:
             current_center = np.array(value['center'])
@@ -82,5 +81,6 @@ class Controller:
                 logger.info('{0} has moved to node {1}.'.format(key, target))
             else:
                 is_done = False
-                logger.info('{0} has not moved to node {1}.'.format(key, target))
+                logger.info(
+                    '{0} has not moved to node {1}.'.format(key, target))
         return is_done
