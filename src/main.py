@@ -94,12 +94,15 @@ class Game:
 
 if __name__ == '__main__':
     # construct a game
+    input('Press ENTER to start a game:')
     game = Game(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
 
     # keep running until the game is over
     while not game.is_over():
+        input('Press ENTER to the next game step:')
         game.forward()
 
     # obtain and print the game report
+    input('The game is over. Press ENTER to the print a game report:')
     report = game.get_report()
     print(report)
