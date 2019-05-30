@@ -35,12 +35,48 @@ class Controller:
         Returns
         -------
         sensor_data: dict
-            sensor data like orientations
+            sensor data like orientations(x,y,z)
+            example:
+                sensor_data = {
+                    'thief': {
+                        'orientation': {
+                            'base': (1, 2, 3),
+                            'current': (2, 4, 1.5)
+                        }
+                    },
+                    'policeman1': {
+                        'orientation': {
+                            'base': (1, 2, 3),
+                            'current': (2, 4, 1.5)
+                        }
+                    },
+                    'policeman2': {
+                        'orientation': {
+                            'base': (1, 2, 3),
+                            'current': (2, 4, 1.5)
+                        }
+                    }
+                }
         """
         sensor_data = {
-            'thief': None,
-            'policeman1': None,
-            'policeman2': None
+            'thief': {
+                'orientation': {
+                    'base': (1, 2, 3),
+                    'current': (2, 4, 1.5)
+                }
+            },
+            'policeman1': {
+                'orientation': {
+                    'base': (1, 2, 3),
+                    'current': (2, 4, 1.5)
+                }
+            },
+            'policeman2': {
+                'orientation': {
+                    'base': (1, 2, 3),
+                    'current': (2, 4, 1.5)
+                }
+            }
         }
         return sensor_data
 
