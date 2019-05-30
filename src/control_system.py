@@ -1,4 +1,7 @@
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Controller:
@@ -26,17 +29,19 @@ class Controller:
         """
         sensor_data = self.get_sensor_data()
         signals = []
-        for key, value in object_list:
+        for key, value in object_list.items():
             # get orientation information
             orientation = sensor_data[key]['orientation']
 
             # build orientation unit vectors
             current_direction = np.array(
                 orientation['current'][0:2]).reshape((-1, 1))
-            current_direction /= np.linalg.norm(current_direction)
+            current_direction = current_direction / \
+                np.linalg.norm(current_direction)
             base_unit_vector = np.array(
                 orientation['base'][0:2]).reshape((-1, 1))
-            base_unit_vector /= np.linalg.norm(base_unit_vector)
+            base_unit_vector = base_unit_vector / \
+                np.linalg.norm(base_unit_vector)
 
             # build center vectors
             current_center = np.array(value['center']).reshape((-1, 1))
@@ -52,7 +57,7 @@ class Controller:
             alpha = np.arccos(base_unit_vector.T @ current_direction)
 
             # calculate rotate angle
-            gamma = alpha-theta
+            gamma = (alpha-theta)/np.pi*360
 
             # construct rotate signal
             signals.append({
@@ -150,7 +155,7 @@ class Controller:
             True if all robots are at correct locations, otherwise False
         """
         is_done = True
-        for key, value in object_list:
+        for key, value in object_list.items():
             current_center = np.array(value['center'])
             target = instructions[key][1]
             target_center = np.array(centers[target-1])
