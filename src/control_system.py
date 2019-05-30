@@ -51,16 +51,18 @@ class Controller:
             # calculate the angle between centers
             delta = next_center - current_center
             dot = np.dot(base_unit_vector.T, delta)
-            det = base_unit_vector[0] * delta[1] - base_unit_vector[1] * delta[0]
+            det = -base_unit_vector[0] * delta[1] + \
+                base_unit_vector[1] * delta[0]
             theta = np.arctan2(det, dot)
 
             # calculate the angle between orientations
             dot = np.dot(base_unit_vector.T, current_direction)
-            det = base_unit_vector[0] * current_direction[1] - base_unit_vector[1] * current_direction[0]
+            det = -base_unit_vector[0] * current_direction[1] + \
+                base_unit_vector[1] * current_direction[0]
             alpha = np.arctan2(det, dot)
 
             # calculate rotate angle
-            gamma = (theta - alpha) * 180 /np.pi
+            gamma = (theta - alpha) * 180 / np.pi
 
             # construct rotate signal
             signals.append({
@@ -89,20 +91,20 @@ class Controller:
                 sensor_data = {
                     'thief': {
                         'orientation': {
-                            'base': (1, 2, 3),
-                            'current': (2, 4, 1.5)
+                            'base': (0, 1, 3),
+                            'current': (1, 0, 1.5)
                         }
                     },
                     'policeman1': {
                         'orientation': {
-                            'base': (1, 2, 3),
-                            'current': (2, 4, 1.5)
+                            'base': (0, 1, 3),
+                            'current': (1, 0, 1.5)
                         }
                     },
                     'policeman2': {
                         'orientation': {
-                            'base': (1, 2, 3),
-                            'current': (2, 4, 1.5)
+                            'base': (0, 1, 3),
+                            'current': (1, 0, 1.5)
                         }
                     }
                 }
@@ -110,20 +112,20 @@ class Controller:
         sensor_data = {
             'thief': {
                 'orientation': {
-                    'base': (1, 2, 3),
-                    'current': (2, 4, 1.5)
+                    'base': (0, 1, 3),
+                    'current': (1, 0, 1.5)
                 }
             },
             'policeman1': {
                 'orientation': {
-                    'base': (1, 2, 3),
-                    'current': (2, 4, 1.5)
+                    'base': (0, 1, 3),
+                    'current': (1, 0, 1.5)
                 }
             },
             'policeman2': {
                 'orientation': {
-                    'base': (1, 2, 3),
-                    'current': (2, 4, 1.5)
+                    'base': (0, 1, 3),
+                    'current': (1, 0, 1.5)
                 }
             }
         }
