@@ -8,7 +8,7 @@ class Controller:
 
     def calculate_control_signals(self, centers, object_list, instructions):
         """
-        calculate real control signals based on instructions.
+        calculate real control signals based on instructions. Now the calculation is based on a simple strategy: rotate gamma degree and move forward one unit.
 
         Parameters
         ----------
@@ -26,6 +26,47 @@ class Controller:
         """
         sensor_data = self.get_sensor_data()
         signals = []
+        for key, value in object_list:
+            # get orientation information
+            orientation = sensor_data[key]['orientation']
+
+            # build orientation unit vectors
+            current_direction = np.array(
+                orientation['current'][0:2]).reshape((-1, 1))
+            current_direction /= np.linalg.norm(current_direction)
+            base_unit_vector = np.array(
+                orientation['base'][0:2]).reshape((-1, 1))
+            base_unit_vector /= np.linalg.norm(base_unit_vector)
+
+            # build center vectors
+            current_center = np.array(value['center']).reshape((-1, 1))
+            next_center = np.array(
+                centers[instructions[key][1]]).reshape((-1, 1))
+
+            # calculate the angle between centers
+            delta = next_center - current_center
+            cos_theta = (base_unit_vector.T @ delta) / np.linalg.norm(delta)
+            theta = np.arccos(cos_theta)
+
+            # calculate the angle between orientations
+            alpha = np.arccos(base_unit_vector.T @ current_direction)
+
+            # calculate rotate angle
+            gamma = alpha-theta
+
+            # construct rotate signal
+            signals.append({
+                'name': key,
+                'type': 'rotate',
+                'param': gamma
+            })
+
+            # construct move signal
+            signals.append({
+                'name': key,
+                'type': 'move',
+                'param': 1
+            })
         return signals
 
     def get_sensor_data(self):
