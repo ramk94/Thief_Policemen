@@ -1,10 +1,11 @@
 import numpy as np
 import cv2
+import uuid
 
 cap = cv2.VideoCapture(0)
 
 
-def get_image():
+def get_image(save=True):
     """
     Capture an image from our camera.
 
@@ -20,4 +21,7 @@ def get_image():
         custom_image_bgr = cv2.imread(
             '../data/processed_images/001/IMG_0897.jpg')
         image = cv2.cvtColor(custom_image_bgr, cv2.COLOR_BGR2RGB)  # BGR to RGB
+    if save:
+        cv2.imwrite('../data/pics/{}.png'.format(uuid.uuid1()),
+                    cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
     return image

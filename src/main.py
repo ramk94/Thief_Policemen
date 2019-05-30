@@ -76,7 +76,7 @@ class Game:
             self.controller.move_robots(control_signals)
 
             # obtain feedback from camera
-            image = get_image()
+            image = get_image(save=False)
             object_list = self.detector.detect_objects(image)
 
     def get_report(self):
