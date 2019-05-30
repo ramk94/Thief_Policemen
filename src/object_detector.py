@@ -1,11 +1,15 @@
 import darknet as dn
 import logging
 import cv2
+import os
 
 logger = logging.getLogger(__name__)
 
 
 def draw_circle(event, x, y, flags, param):
+    """
+    Opencv mouse click event which draws a blue circle after a double click
+    """
     if event == cv2.EVENT_LBUTTONDBLCLK:
         logger.debug('mouse click at (width={0},height={1})'.format(x, y))
         image = param.get('image')
@@ -99,21 +103,31 @@ class Detector:
         centers: list
             relative coordinates of triangles on the gaming board(width,height)
         """
+        # RBG image to BGR image for better visualization
+        frame = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+        # build a Opencv window and set up a mouse click event
         centers = []
         window_name = 'center_tool'
         cv2.namedWindow(window_name)
         cv2.setMouseCallback(window_name, draw_circle, param={
-                             'image': image, 'centers': centers, 'window_name': window_name})
-        cv2.imshow(window_name, image)
+                             'image': frame, 'centers': centers, 'window_name': window_name})
+        cv2.imshow(window_name, frame)
+
+        # wait for exit flag
         if cv2.waitKey(0) & 0xFF == ord('q'):
             cv2.destroyWindow(window_name)
+
+        # save or read centers file
+        center_file_path = 'centers.txt'
         if not centers:
-            with open('centers.txt', encoding='utf-8', mode='r') as file:
+            assert os.path.exists(center_file_path)
+            with open(center_file_path, encoding='utf-8', mode='r') as file:
                 for line in file:
                     center = tuple(map(float, line.strip().split(' ')))
                     centers.append(center)
         else:
-            with open('centers.txt', encoding='utf-8', mode='w') as file:
+            with open(center_file_path, encoding='utf-8', mode='w') as file:
                 for center in centers:
                     file.write('{width} {height}\n'.format(
                         width=center[0], height=center[1]))
