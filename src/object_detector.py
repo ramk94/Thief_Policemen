@@ -5,6 +5,20 @@ import cv2
 logger = logging.getLogger(__name__)
 
 
+def draw_circle(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDBLCLK:
+        logger.debug('mouse click at (width={0},height={1})'.format(x, y))
+        image = param.get('image')
+        height, width = image.shape[0], image.shape[1]
+        centers = param.get('centers')
+        window_name = param.get('window_name')
+        cv2.circle(image, (x, y), 10, (255, 0, 0), -1)
+        centers.append((x/width, y/height))
+        logger.debug(
+            'relative center is (width={0},height={1})'.format(x/width, y/height))
+        cv2.imshow(window_name, image)
+
+
 class Detector:
     """
     Object detector based on YOLO network.
@@ -71,7 +85,7 @@ class Detector:
             }
         return object_list
 
-    def detect_gaming_board(self, image):
+    def detect_gaming_board(self, image, save=True):
         """
         Analysis the gaming board image to obtain centers of triangles.
 
@@ -83,21 +97,21 @@ class Detector:
         Returns
         -------
         centers: list
-            relative coordinates of triangles on the gaming board
+            relative coordinates of triangles on the gaming board(width,height)
         """
-        im = self.convert_image(image)
-        centers = dn.detect_image(self.net, self.meta, im)
-        centers = [
-            (0.1, 0.6),
-            (0.2, 0.2),
-            (0.2, 0.4),
-            (0.2, 0.8),
-            (0.6, 0.2),
-            (0.6, 0.5),
-            (0.6, 0.6),
-            (0.6, 0.7),
-            (0.7, 0.9),
-        ]
+        centers = []
+        window_name = 'center_tool'
+        cv2.namedWindow(window_name)
+        cv2.setMouseCallback(window_name, draw_circle, param={
+                             'image': image, 'centers': centers, 'window_name': window_name})
+        cv2.imshow(window_name, image)
+        if cv2.waitKey(0) & 0xFF == ord('q'):
+            cv2.destroyWindow(window_name)
+        if save:
+            with open('centers.txt', encoding='utf-8', mode='w') as file:
+                for center in centers:
+                    file.write('{width} {height}\n'.format(
+                        width=center[0], height=center[1]))
         return centers
 
     def convert_image(self, image):
@@ -114,6 +128,7 @@ class Detector:
         im: custom object
             an object which is defined by darknet library
         """
-        resized_image = cv2.resize(image, (self.width, self.height), interpolation=cv2.INTER_LINEAR)
+        resized_image = cv2.resize(
+            image, (self.width, self.height), interpolation=cv2.INTER_LINEAR)
         im, _ = dn.array_to_image(resized_image)
         return im
