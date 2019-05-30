@@ -87,6 +87,9 @@ class Detector:
                 'center': center,
                 'size': size
             }
+        if len(object_list) <= 3:
+            logger.warning(
+                'Only {} objects are recognized'.format(len(object_list)))
         return object_list
 
     def detect_gaming_board(self, image):
