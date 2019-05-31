@@ -26,7 +26,7 @@ class Robot:
         self.name = name
         self.ip = ip
         self.port = port
-        self.client = zerorpc.Client()
+        self.client = zerorpc.Client(heartbeat=20)
         self.client.connect('tcp://{ip}:{port}'.format(ip=ip, port=port))
 
     def rotate(self, alpha):
@@ -75,5 +75,5 @@ class Robot:
 
 if __name__ == '__main__':
     robot_client = Robot('thief', '192.168.1.106', 4242)
-    # robot_client.rotate(90)
-    robot_client.move_forward(4)
+    robot_client.rotate(-253)
+    # robot_client.move_forward(4)

@@ -181,5 +181,7 @@ if __name__ == '__main__':
                 cv2.circle(
                     image, (int(value['center'][0]*width), int(value['center'][1]*height)), 10, (255, 0, 0), -1)
                 cv2.imshow(window_name, image)
+        else:
+            cv2.imshow(window_name, image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyWindow(window_name)
