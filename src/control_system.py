@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-
+from robot_client import Robot
 logger = logging.getLogger(__name__)
 
 
@@ -9,7 +9,10 @@ class Controller:
     Control system is the most important part of our project.
     """
 
-    def calculate_control_signals(self, centers, object_list, instructions):
+    def __init__(self):
+        self.robot_client = Robot('thief', '192.168.1.106', 4242)
+
+    def calculate_control_signals(self, centers, object_list, instructions, sensor_data=None):
         """
         calculate real control signals based on instructions. Now the calculation is based on a simple strategy: rotate gamma degree and move forward one unit.
 
@@ -27,7 +30,8 @@ class Controller:
         signals: dict
             control signals based on instructions
         """
-        sensor_data = self.get_sensor_data()
+        if sensor_data is None:
+            sensor_data = self.get_sensor_data()
         signals = []
         for key, value in object_list.items():
             # get orientation information
@@ -46,7 +50,7 @@ class Controller:
             # build center vectors
             current_center = np.array(value['center']).reshape((-1, 1))
             next_center = np.array(
-                centers[instructions[key][1]]).reshape((-1, 1))
+                centers[instructions[key][1]-1]).reshape((-1, 1))
 
             # calculate the angle between centers
             delta = next_center - current_center
@@ -78,6 +82,12 @@ class Controller:
                 'param': 1
             })
         return signals
+
+    def get_orientation(self):
+        self.robot_client.move_forward(4)
+        self.robot_client.rotate(180)
+        self.robot_client.move_forward(4)
+        self.robot_client.rotate(180)
 
     def get_sensor_data(self):
         """
@@ -171,3 +181,81 @@ class Controller:
                 logger.info(
                     '{0} has not moved to node {1}.'.format(key, target))
         return is_done
+
+
+if __name__ == '__main__':
+    import cv2
+    from camera_system import get_image
+    from object_detector import Detector
+
+    WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
+    NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
+    OBJECT_CONFIG_PATH = '../cfg/custom.data'
+    detector = Detector(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
+    window_name = 'test'
+    cv2.namedWindow(window_name)
+    # wait for exit flag
+    object_list = []
+    while object_list == []:
+        image = get_image(save=False)
+        object_list = detector.detect_objects(image)
+    print(object_list)
+    if len(object_list) > 0:
+        for key, value in object_list.items():
+            height, width = image.shape[0], image.shape[1]
+            cv2.circle(
+                image, (int(value['center'][0]*width), int(value['center'][1]*height)), 10, (255, 0, 0), -1)
+            cv2.imshow(window_name, image)
+    centers = [
+        (0.55, 0.70),
+        (0.593, 0.40)
+    ]
+    controller = Controller()
+    controller.robot_client.move_forward(4)
+    controller.robot_client.rotate(180)
+
+    object_list = []
+    while object_list == []:
+        image = get_image(save=False)
+        object_list = detector.detect_objects(image)
+    p2 = np.array(object_list['thief']['center']).reshape((-1, 1))
+
+    controller.robot_client.move_forward(4)
+    controller.robot_client.rotate(180)
+
+    object_list = []
+    while object_list == []:
+        image = get_image(save=False)
+        object_list = detector.detect_objects(image)
+    p1 = np.array(object_list['thief']['center']).reshape((-1, 1))
+
+    sensor_data = {
+        'thief': {
+            'orientation': {
+                'base': (0, 1, 3),
+                'current': ((p2-p1)[0], (p2-p1)[1], 1.5)
+            }
+        }
+    }
+    signals = controller.calculate_control_signals(
+        centers, object_list, {'thief': (1, 2)}, sensor_data)
+    alpha = signals[0]['param']
+    if np.isnan(alpha):
+        alpha = 90
+    controller.robot_client.rotate(alpha)
+    while controller.is_finished(centers, object_list, {'thief': (1, 2)}):
+        controller.robot_client.move_forward(1)
+        image = get_image(save=False)
+        object_list = detector.detect_objects(image)
+        print(object_list)
+        if len(object_list) > 0:
+            for key, value in object_list.items():
+                height, width = image.shape[0], image.shape[1]
+                cv2.circle(
+                    image, (int(value['center'][0]*width), int(value['center'][1]*height)), 10, (255, 0, 0), -1)
+        cv2.imshow(window_name, image)
+    print('done')
+    # 0.43,0.67    0.55,0.72
+    # controller.robot_client.move_forward(4)
+    # controller.robot_client.rotate(180)
+    # controller.get_orientation()

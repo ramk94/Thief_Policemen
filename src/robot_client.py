@@ -1,3 +1,10 @@
+import zerorpc
+
+# c = zerorpc.Client()
+# c.connect("tcp://127.0.0.1:4242")
+# print(c.hello("RPC"))
+
+
 class Robot:
     """
     Robot class is a high-level abstraction of our real objects, and it has simple interfaces which are easy to manipulate.
@@ -19,6 +26,8 @@ class Robot:
         self.name = name
         self.ip = ip
         self.port = port
+        self.client = zerorpc.Client()
+        self.client.connect('tcp://{ip}:{port}'.format(ip=ip, port=port))
 
     def rotate(self, alpha):
         """
@@ -39,6 +48,7 @@ class Robot:
             'current_direction': alpha,
             'flag': True
         }
+        self.client.rotate(alpha)
         return result
 
     def move_forward(self, n):
@@ -59,4 +69,11 @@ class Robot:
             'steps': n,
             'flag': True
         }
+        self.client.move_forward(n)
         return result
+
+
+if __name__ == '__main__':
+    robot_client = Robot('thief', '192.168.1.106', 4242)
+    # robot_client.rotate(90)
+    robot_client.move_forward(4)

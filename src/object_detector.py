@@ -154,3 +154,32 @@ class Detector:
             image, (self.width, self.height), interpolation=cv2.INTER_LINEAR)
         im, _ = dn.array_to_image(resized_image)
         return im
+
+
+if __name__ == '__main__':
+    from camera_system import get_image
+    from object_detector import Detector
+    from strategy import Strategy
+    from graph_builder import GraphBuilder
+    from control_system import Controller
+
+    WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
+    NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
+    OBJECT_CONFIG_PATH = '../cfg/custom.data'
+    detector = Detector(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
+    window_name = 'test'
+    cv2.namedWindow(window_name)
+    # wait for exit flag
+
+    while True:
+        image = get_image(save=False)
+        object_list = detector.detect_objects(image)
+        print(object_list)
+        if len(object_list) > 0:
+            for key, value in object_list.items():
+                height, width = image.shape[0], image.shape[1]
+                cv2.circle(
+                    image, (int(value['center'][0]*width), int(value['center'][1]*height)), 10, (255, 0, 0), -1)
+                cv2.imshow(window_name, image)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            cv2.destroyWindow(window_name)

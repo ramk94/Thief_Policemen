@@ -1,9 +1,11 @@
-import zerorpc
-from hex_walker_driver import *
-import time
-import Adafruit_PCA9685
 import sys
 sys.path.append("../robot_drivers/")
+import Adafruit_PCA9685
+import time
+from hex_walker_driver import *
+import zerorpc
+
+
 
 # init the pwm stuffs and run selected tests
 pwm_40 = Adafruit_PCA9685.PCA9685(address=0x40)
@@ -116,8 +118,9 @@ class HexWalkerRemote(object):
         print('move {}'.format(n))
 
     def rotate(self, alpha):
-        hex_walker.walk(1, alpha)
-        print('rotate {} and move 1 step'.format(alpha))
+        n = alpha//18
+        hex_walker.rotate(n, RIGHT)
+        print('rotate {} with {} step'.format(alpha, n))
 
 
 s = zerorpc.Server(HexWalkerRemote())

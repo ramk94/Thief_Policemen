@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import uuid
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 
 def get_image(save=True):
