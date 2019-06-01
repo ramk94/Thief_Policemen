@@ -19,10 +19,8 @@ def get_image(save=True):
     if flag:
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     else:
-        custom_image_bgr = cv2.imread(
-            '../data/processed_images/001/IMG_0897.jpg')
-        image = cv2.cvtColor(custom_image_bgr, cv2.COLOR_BGR2RGB)  # BGR to RGB
-    if save:
+        image = None
+    if image is not None and save:
         cv2.imwrite('../data/pics/{}.png'.format(uuid.uuid1()),
                     cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
     return image

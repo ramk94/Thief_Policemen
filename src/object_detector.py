@@ -167,11 +167,15 @@ if __name__ == '__main__':
     NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
     OBJECT_CONFIG_PATH = '../cfg/custom.data'
     detector = Detector(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
+
     window_name = 'test'
     cv2.namedWindow(window_name)
-
     while True:
         image = get_image(save=False)
+        if image is None:
+            break
+        else:
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         object_list = detector.detect_objects(image)
         print(object_list)
         if len(object_list) > 0:
@@ -182,4 +186,5 @@ if __name__ == '__main__':
                 cv2.circle(image, (x, y), 10, (255, 0, 0), -1)
         cv2.imshow(window_name, image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            cv2.destroyWindow(window_name)
+            break
+    cv2.destroyWindow(window_name)
