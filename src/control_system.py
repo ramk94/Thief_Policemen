@@ -281,6 +281,7 @@ if __name__ == '__main__':
     WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
     NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
     OBJECT_CONFIG_PATH = '../cfg/custom.data'
+    ROBOTS_CONFIG_PATH = '../cfg/robots.json'
     detector = Detector(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
     centers = [
         (0.62, 0.72),
@@ -289,19 +290,25 @@ if __name__ == '__main__':
     window_name = 'test'
     cv2.namedWindow(window_name)
 
-    object_list = []
-    while len(object_list) == 0:
-        image = get_image(save=False)
-        object_list = detector.detect_objects(image)
+
+    def get_object_list():
+        obj_list = {}
+        img = None
+        while len(obj_list) == 0:
+            img = get_image(save=False)
+            obj_list = detector.detect_objects(img)
+            for kk, oo in object_list.items():
+                hh, ww = img.shape[0], img.shape[1]
+                cv2.circle(
+                    image, (int(oo['center'][0] * ww), int(oo['center'][1] * hh)), 10, (255, 0, 0), -1)
+        return obj_list, img
+
+
+    object_list, image = get_object_list()
     print(object_list)
 
     p1 = np.array(object_list['thief']['center']).reshape((-1, 1))
 
-    if len(object_list) > 0:
-        for key, value in object_list.items():
-            height, width = image.shape[0], image.shape[1]
-            cv2.circle(
-                image, (int(value['center'][0] * width), int(value['center'][1] * height)), 10, (255, 0, 0), -1)
     height, width = image.shape[0], image.shape[1]
     x = int(centers[1][0] * width)
     y = int(centers[1][1] * height)
@@ -310,20 +317,20 @@ if __name__ == '__main__':
     if cv2.waitKey(1) & 0xFF == ord('q'):
         cv2.destroyAllWindows()
 
-    controller = Controller()
+    controller = Controller(detector, ROBOTS_CONFIG_PATH)
     controller.robot_client.move_forward(4)
 
-    object_list = []
-    while len(object_list) == 0:
-        image = get_image(save=False)
-        object_list = detector.detect_objects(image)
+    object_list, image = get_object_list()
+
     p2 = np.array(object_list['thief']['center']).reshape((-1, 1))
+
+    current_direction = p2 - p1
 
     sensors = {
         'thief': {
             'orientation': {
-                'base': (0, 1),
-                'current': ((p2 - p1)[0], (p2 - p1)[1])
+                'base': (0, -1),
+                'current': (current_direction[0], current_direction[1])
             }
         }
     }
@@ -365,28 +372,7 @@ if __name__ == '__main__':
         print('alpha is {}'.format(alpha))
         if alpha > 50:
             controller.robot_client.rotate(alpha)
-        #
-        # def unit_vector(vector):
-        #     return vector / np.linalg.norm(vector)
-        #
-        #
-        # def angle_between(v1, v2):
-        #     v1_u = unit_vector(v1)
-        #     v2_u = unit_vector(v2)
-        #     return np.arccos(np.dot(v1_u.T, v2_u)) / np.pi * 180
-        #
-        #
-        # rotate = False
-        # current_direction = vector_current - vector_previous
-        # controller.last_vector = target_vector - vector_current
-        # alpha = angle_between(current_direction, controller.last_vector).item()
-        # alpha = int(alpha)
-        # if alpha > 30:
-        #     rotate = True
-        # print('alpha is {}'.format(alpha))
-        # rotate = False
-        # if rotate:
-        #     controller.robot_client.rotate(alpha)
+
         if len(object_list) > 0:
             for key, value in object_list.items():
                 height, width = image.shape[0], image.shape[1]
