@@ -11,6 +11,30 @@ def get_unit_vector(vec):
     return vec / np.linalg.norm(vec)
 
 
+def calculate_angle(current_center, target_center, base_direction, current_direction):
+    # build orientation unit vectors
+    current_direction_unit = get_unit_vector(current_direction)
+    base_direction_unit = get_unit_vector(base_direction)
+
+    # calculate the angle between centers
+    delta = target_center - current_center
+    delta_unit = get_unit_vector(delta)
+    dot = np.dot(base_direction_unit.T, delta_unit)
+    det = np.cross(delta_unit.flatten(), base_direction_unit.flatten())
+    theta = np.arctan2(det, dot) * 180 / np.pi
+
+    # calculate the angle between orientations
+    dot = np.dot(base_direction_unit.T, current_direction_unit)
+    det = np.cross(current_direction_unit.flatten(),
+                   base_direction_unit.flatten())
+    alpha = np.arctan2(det, dot) * 180 / np.pi
+
+    # calculate rotate angle
+    gamma = alpha - theta
+
+    return gamma.item()
+
+
 class Controller:
     """
     Control system is the most important part of our project.
@@ -85,35 +109,18 @@ class Controller:
             orientation = sensor_data[key]['orientation']
 
             # build orientation unit vectors
-            current_direction = np.array(
-                orientation['current']).reshape((-1, 1))
-            current_direction_unit = get_unit_vector(current_direction)
+            current_direction = np.array(orientation['current']).reshape((-1, 1))
             base_direction = np.array(orientation['base']).reshape((-1, 1))
-            base_direction_unit = get_unit_vector(base_direction)
 
             # build center vectors
             current_center = np.array(value['center']).reshape((-1, 1))
-            next_center = np.array(
-                centers[instructions[key][1] - 1]).reshape((-1, 1))
+            target_center = np.array(centers[instructions[key][1] - 1]).reshape((-1, 1))
 
-            # calculate the angle between centers
-            delta = next_center - current_center
-            delta_unit = get_unit_vector(delta)
-            dot = np.dot(base_direction_unit.T, delta_unit)
-            det = np.cross(delta_unit.flatten(), base_direction_unit.flatten())
-            theta = np.arctan2(det, dot) * 180 / np.pi
-
-            # calculate the angle between orientations
-            dot = np.dot(base_direction_unit.T, current_direction_unit)
-            det = np.cross(current_direction_unit.flatten(),
-                           base_direction_unit.flatten())
-            alpha = np.arctan2(det, dot) * 180 / np.pi
-
-            # calculate rotate angle
-            gamma = alpha - theta
+            # calculate angle
+            gamma = calculate_angle(current_center, target_center, base_direction, current_direction)
 
             # calculate euclidean distance between current position and target center
-            distance = np.linalg.norm(current_center - next_center)
+            distance = np.linalg.norm(current_center - target_center)
 
             # only return control signals when the distance is larger than the threshold
             if distance > threshold:
@@ -121,7 +128,7 @@ class Controller:
                 signals.append({
                     'name': key,
                     'type': 'rotate',
-                    'param': int(gamma.item())
+                    'param': int(gamma)
                 })
 
                 # construct move signal
@@ -171,7 +178,7 @@ class Controller:
         while name not in object_list:
             image = get_image()
             object_list = detector.detect_objects(image)
-        previous_center = object[name]['center']
+        previous_center = object_list[name]['center']
         previous_center_vector = np.array(previous_center).reshape((-1, 1))
 
         # slightly move the robot
@@ -182,7 +189,7 @@ class Controller:
         while name not in object_list:
             image = get_image()
             object_list = detector.detect_objects(image)
-        current_center = object[name]['center']
+        current_center = object_list[name]['center']
         current_center_vector = np.array(current_center).reshape((-1, 1))
 
         # calculate direction
