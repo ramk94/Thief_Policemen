@@ -2,6 +2,7 @@ import numpy as np
 import logging
 from robot_client import Robot
 import json
+from camera_system import get_image
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class Controller:
     Control system is the most important part of our project.
     """
 
-    def __init__(self, robots_config_path=None):
+    def __init__(self, detector, robots_config_path=None):
         """
         Construct controller by a robot config file.
 
@@ -24,6 +25,8 @@ class Controller:
         robots_config_path: str
             file path of robots config file
         """
+        self.detector = detector
+        self.sensors = {}
         self.robots = {}
         if robots_config_path:
             with open(robots_config_path, mode='r', encoding='utf-8') as file:
@@ -137,7 +140,7 @@ class Controller:
         ----------
         name: str
             robot's name
-        
+
         Returns
         -------
         sensor_data: dict
@@ -151,7 +154,48 @@ class Controller:
         """
         robot = self.robots[name]
         sensor_data = robot.get_sensor_data()
+        if sensor_data is None:
+            if name not in self.sensors:
+                sensor_data = self.get_orientation_by_camera(name)
+            else:
+                sensor_data = self.sensors[name]
+        self.sensors[name] = sensor_data
         return sensor_data
+
+    def get_orientation_by_camera(self, name):
+        # get robot instance by name
+        robot = self.robots[name]
+
+        # get previous location
+        object_list = {}
+        while name not in object_list:
+            image = get_image()
+            object_list = detector.detect_objects(image)
+        previous_center = object[name]['center']
+        previous_center_vector = np.array(previous_center).reshape((-1, 1))
+
+        # slightly move the robot
+        robot.move_forward(3)
+
+        # get current location
+        object_list = {}
+        while name not in object_list:
+            image = get_image()
+            object_list = detector.detect_objects(image)
+        current_center = object[name]['center']
+        current_center_vector = np.array(current_center).reshape((-1, 1))
+
+        # calculate direction
+        direction = current_center_vector-previous_center_vector
+
+        # construct result
+        result = {
+            'orientation': {
+                'base': (0, 1),
+                'current': (direction[0], direction[1])
+            }
+        }
+        return result
 
     def move_robots(self, control_signals):
         """
