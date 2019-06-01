@@ -33,11 +33,6 @@ class Strategy:
             choices = list(set(item_index_1[0]) | set(item_index_2[0]))
             next_step = random.choice(choices)
             instructions[object] = [objects_on_graph[object], next_step + 1]
-        # instructions = {
-        #    'thief': (3, 4),
-        #    'policeman1': (7, 6),
-        #    'policeman2': (9, 8)
-        # }
         return instructions
 
 
