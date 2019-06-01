@@ -16,6 +16,14 @@ class Controller:
     """
 
     def __init__(self, robots_config_path=None):
+        """
+        Construct controller by a robot config file.
+
+        Parameters
+        -------
+        robots_config_path: str
+            file path of robots config file
+        """
         self.robots = {}
         if robots_config_path:
             with open(robots_config_path, mode='r', encoding='utf-8') as file:
@@ -23,10 +31,15 @@ class Controller:
             for key, value in robots_config.items():
                 robot = Robot(key, value['ip'], value['port'])
                 robots[key] = robot
-        self.robot_client = Robot('thief', '192.168.1.106', 4242)
-        self.last_vector = None
+        else:
+            # testing code
+            self.robot_client = Robot('thief', '192.168.1.106', 4242)
+            self.last_vector = None
 
     def connect(self):
+        """
+        Connect to robots.
+        """
         for key, robot in self.robots.items():
             robot.connect()
 
@@ -44,6 +57,8 @@ class Controller:
             a dict consists of future decisions
         sensor_data: dict
             a dict consists of orientation data(only use sensor when sensor_data is None)
+        threshold: float
+            a float value indicates the threshold of distance between centers
 
         Returns
         -------
@@ -116,8 +131,13 @@ class Controller:
 
     def get_sensor_data(self, name):
         """
-        Collect senor data from robots.
+        Collect senor data from a robot with its name.
 
+        Parameters
+        ----------
+        name: str
+            robot's name
+        
         Returns
         -------
         sensor_data: dict
