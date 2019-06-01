@@ -51,7 +51,7 @@ class Controller:
             current_center = np.array(value['center']).reshape((-1, 1))
             next_center = np.array(
                 centers[instructions[key][1] - 1]).reshape((-1, 1))
-
+            next_center = next_center / np.linalg.norm(next_center)
             # calculate the angle between centers
             delta = next_center - current_center
             dot = np.dot(base_direction_unit.T, delta)
@@ -187,7 +187,10 @@ if __name__ == '__main__':
     NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
     OBJECT_CONFIG_PATH = '../cfg/custom.data'
     detector = Detector(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
-
+    centers = [
+        (0.62, 0.72),
+        (0.43, 0.30)
+    ]
     window_name = 'test'
     cv2.namedWindow(window_name)
 
@@ -204,13 +207,14 @@ if __name__ == '__main__':
             height, width = image.shape[0], image.shape[1]
             cv2.circle(
                 image, (int(value['center'][0] * width), int(value['center'][1] * height)), 10, (255, 0, 0), -1)
+    height, width = image.shape[0], image.shape[1]
+    x = int(centers[1][0] * width)
+    y = int(centers[1][1] * height)
+    cv2.circle(image, (x, y), 20, (0, 255, 0), -1)
     cv2.imshow(window_name, image)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         cv2.destroyAllWindows()
-    centers = [
-        (0.62, 0.72),
-        (0.59, 0.46)
-    ]
+
     controller = Controller()
     controller.robot_client.move_forward(4)
 
@@ -264,7 +268,7 @@ if __name__ == '__main__':
             centers, object_list, {'thief': (1, 2)}, sensors)
         alpha = int(signals[0]['param'])
         print('alpha is {}'.format(alpha))
-        if alpha > 20:
+        if alpha > 50:
             controller.robot_client.rotate(alpha)
         #
         # def unit_vector(vector):
@@ -294,6 +298,10 @@ if __name__ == '__main__':
                 x = int(value['center'][0] * width)
                 y = int(value['center'][1] * height)
                 cv2.circle(image, (x, y), 10, (255, 0, 0), -1)
+        height, width = image.shape[0], image.shape[1]
+        x = int(centers[1][0] * width)
+        y = int(centers[1][1] * height)
+        cv2.circle(image, (x, y), 10, (255, 255, 255), -1)
         cv2.imshow(window_name, image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
