@@ -1,8 +1,13 @@
 import numpy as np
 import logging
 from robot_client import Robot
+import json
 
 logger = logging.getLogger(__name__)
+
+
+def get_unit_vector(vec):
+    return vec / np.linalg.norm(vec)
 
 
 class Controller:
@@ -10,11 +15,22 @@ class Controller:
     Control system is the most important part of our project.
     """
 
-    def __init__(self, robots=None):
+    def __init__(self, robots_config_path=None):
+        self.robots = {}
+        if robots_config_path:
+            with open(robots_config_path, mode='r', encoding='utf-8') as file:
+                robots_config = json.load(file)
+            for key, value in robots_config.items():
+                robot = Robot(key, value['ip'], value['port'])
+                robots[key] = robot
         self.robot_client = Robot('thief', '192.168.1.106', 4242)
         self.last_vector = None
 
-    def calculate_control_signals(self, centers, object_list, instructions, sensor_data=None):
+    def connect(self):
+        for key, robot in self.robots.items():
+            robot.connect()
+
+    def calculate_control_signals(self, centers, object_list, instructions, sensor_data=None, threshold=0.05):
         """
         calculate real control signals based on instructions. Now the calculation is based on a simple strategy: rotate gamma degree and move forward one unit.
 
@@ -42,43 +58,51 @@ class Controller:
             orientation = sensor_data[key]['orientation']
 
             # build orientation unit vectors
-            current_direction = np.array(orientation['current']).reshape((-1, 1))
-            current_direction_unit = current_direction / np.linalg.norm(current_direction)
+            current_direction = np.array(
+                orientation['current']).reshape((-1, 1))
+            current_direction_unit = get_unit_vector(current_direction)
             base_direction = np.array(orientation['base']).reshape((-1, 1))
-            base_direction_unit = base_direction / np.linalg.norm(base_direction)
+            base_direction_unit = get_unit_vector(base_direction)
 
             # build center vectors
             current_center = np.array(value['center']).reshape((-1, 1))
             next_center = np.array(
                 centers[instructions[key][1] - 1]).reshape((-1, 1))
-            next_center = next_center / np.linalg.norm(next_center)
+
             # calculate the angle between centers
             delta = next_center - current_center
-            dot = np.dot(base_direction_unit.T, delta)
-            det = np.cross(delta.flatten(), base_direction_unit.flatten())
+            delta_unit = get_unit_vector(delta)
+            dot = np.dot(base_direction_unit.T, delta_unit)
+            det = np.cross(delta_unit.flatten(), base_direction_unit.flatten())
             theta = np.arctan2(det, dot) * 180 / np.pi
 
             # calculate the angle between orientations
             dot = np.dot(base_direction_unit.T, current_direction_unit)
-            det = np.cross(current_direction_unit.flatten(), base_direction_unit.flatten())
+            det = np.cross(current_direction_unit.flatten(),
+                           base_direction_unit.flatten())
             alpha = np.arctan2(det, dot) * 180 / np.pi
 
             # calculate rotate angle
             gamma = theta - alpha
 
-            # construct rotate signal
-            signals.append({
-                'name': key,
-                'type': 'rotate',
-                'param': int(gamma.item())
-            })
+            # calculate euclidean distance between current position and target center
+            distance = np.linalg.norm(current_center-next_center)
 
-            # construct move signal
-            signals.append({
-                'name': key,
-                'type': 'move',
-                'param': 1
-            })
+            # only return control signals when the distance is larger than the threshold
+            if distance > threshold:
+                # construct rotate signal
+                signals.append({
+                    'name': key,
+                    'type': 'rotate',
+                    'param': int(gamma.item())
+                })
+
+                # construct move signal
+                signals.append({
+                    'name': key,
+                    'type': 'move',
+                    'param': 1
+                })
         return signals
 
     def get_sensor_data(self):
@@ -142,8 +166,21 @@ class Controller:
         control_signals: dict
             control signals based on instructions
         """
+        results = []
         for signal in control_signals:
-            pass
+            robot_name = signal['name']
+            command_type = signal['type']
+            param = signal['param']
+            robot = self.robots[robot_name]
+            if command_type == 'rotate':
+                result = robot.rotate(param)
+            elif command_type == 'move':
+                result = robot.move_forward(param)
+            else:
+                message = 'invalid robot command type: {}'.format(command_type)
+                raise Exception(message)
+            results.append(result)
+        return results
 
     def is_finished(self, centers, object_list, instructions, threshold=0.05):
         """
@@ -165,16 +202,27 @@ class Controller:
         """
         is_done = True
         for key, value in object_list.items():
+            # get current center coordinates
             current_center = np.array(value['center'])
+
+            # get target center coordinates
             target = instructions[key][1]
             target_center = np.array(centers[target - 1])
-            print("error: " + str(np.linalg.norm(current_center - target_center)))
-            if np.linalg.norm(current_center - target_center) <= threshold:
-                logger.info('{0} has moved to node {1}.'.format(key, target))
+
+            # calculate euclidean distance between current center and target center
+            distance = np.linalg.norm(current_center - target_center)
+            message = "{0}: {1} -> {2} = {3}".format(
+                key, current_center, target_center, distance)
+            logger.info(message)
+
+            # if distance is too big, then is_done is False
+            if distance <= threshold:
+                message = '{0} has moved to node {1}.'.format(key, target)
+                logger.info(message)
             else:
                 is_done = False
-                logger.info(
-                    '{0} has not moved to node {1}.'.format(key, target))
+                message = '{0} has not moved to node {1}.'.format(key, target)
+                logger.info(message)
         return is_done
 
 

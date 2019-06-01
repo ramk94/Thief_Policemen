@@ -23,7 +23,13 @@ class Robot:
         self.ip = ip
         self.port = port
         self.client = zerorpc.Client(heartbeat=None)
-        self.client.connect('tcp://{ip}:{port}'.format(ip=ip, port=port))
+
+    def connect(self):
+        address = 'tcp://{ip}:{port}'.format(ip=self.ip, port=self.port)
+        self.client.connect(address)
+
+    def disconnect(self):
+        self.client.close()
 
     def rotate(self, alpha):
         """
