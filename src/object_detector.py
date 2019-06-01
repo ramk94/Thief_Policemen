@@ -17,9 +17,9 @@ def draw_circle(event, x, y, flags, param):
         centers = param.get('centers')
         window_name = param.get('window_name')
         cv2.circle(image, (x, y), 10, (255, 0, 0), -1)
-        centers.append((x/width, y/height))
+        centers.append((x / width, y / height))
         logger.debug(
-            'relative center is (width={0},height={1})'.format(x/width, y/height))
+            'relative center is (width={0},height={1})'.format(x / width, y / height))
         cv2.imshow(window_name, image)
 
 
@@ -113,8 +113,12 @@ class Detector:
         centers = []
         window_name = 'center_tool'
         cv2.namedWindow(window_name)
-        cv2.setMouseCallback(window_name, draw_circle, param={
-                             'image': frame, 'centers': centers, 'window_name': window_name})
+        callback_params = {
+            'image': frame,
+            'centers': centers,
+            'window_name': window_name
+        }
+        cv2.setMouseCallback(window_name, draw_circle, param=callback_params)
         cv2.imshow(window_name, frame)
 
         # wait for exit flag
@@ -158,10 +162,6 @@ class Detector:
 
 if __name__ == '__main__':
     from camera_system import get_image
-    from object_detector import Detector
-    from strategy import Strategy
-    from graph_builder import GraphBuilder
-    from control_system import Controller
 
     WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
     NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
@@ -169,7 +169,6 @@ if __name__ == '__main__':
     detector = Detector(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
     window_name = 'test'
     cv2.namedWindow(window_name)
-    # wait for exit flag
 
     while True:
         image = get_image(save=False)
@@ -178,10 +177,9 @@ if __name__ == '__main__':
         if len(object_list) > 0:
             for key, value in object_list.items():
                 height, width = image.shape[0], image.shape[1]
-                cv2.circle(
-                    image, (int(value['center'][0]*width), int(value['center'][1]*height)), 10, (255, 0, 0), -1)
-                cv2.imshow(window_name, image)
-        else:
-            cv2.imshow(window_name, image)
+                x = int(value['center'][0] * width)
+                y = int(value['center'][1] * height)
+                cv2.circle(image, (x, y), 10, (255, 0, 0), -1)
+        cv2.imshow(window_name, image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyWindow(window_name)
