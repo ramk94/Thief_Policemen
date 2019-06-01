@@ -31,9 +31,9 @@ class Controller:
         if robots_config_path:
             with open(robots_config_path, mode='r', encoding='utf-8') as file:
                 robots_config = json.load(file)
-            for key, value in robots_config.items():
-                robot = Robot(key, value['ip'], value['port'])
-                robots[key] = robot
+                for key, value in robots_config.items():
+                    robot = Robot(key, value['ip'], value['port'])
+                    self.robots[key] = robot
         else:
             # testing code
             self.robot_client = Robot('thief', '192.168.1.106', 4242)
@@ -77,7 +77,7 @@ class Controller:
             if key not in sensor_data:
                 result = self.get_sensor_data(key)
                 if result['flag']:
-                    sensor_data[key] = result
+                    sensor_data[key] = result['data']
                 else:
                     raise Exception('cannot obtain sensor data')
 
@@ -110,10 +110,10 @@ class Controller:
             alpha = np.arctan2(det, dot) * 180 / np.pi
 
             # calculate rotate angle
-            gamma = theta - alpha
+            gamma = alpha - theta
 
             # calculate euclidean distance between current position and target center
-            distance = np.linalg.norm(current_center-next_center)
+            distance = np.linalg.norm(current_center - next_center)
 
             # only return control signals when the distance is larger than the threshold
             if distance > threshold:
@@ -148,7 +148,7 @@ class Controller:
             example:
                 sensor_data = {
                         'orientation': {
-                            'base': (0, 1),
+                            'base': (0, -1),
                             'current': (1, 0)
                         }
         """
@@ -186,7 +186,7 @@ class Controller:
         current_center_vector = np.array(current_center).reshape((-1, 1))
 
         # calculate direction
-        direction = current_center_vector-previous_center_vector
+        direction = current_center_vector - previous_center_vector
 
         # construct result
         result = {

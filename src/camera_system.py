@@ -2,7 +2,8 @@ import numpy as np
 import cv2
 import uuid
 
-cap = cv2.VideoCapture(1)
+# cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture('../data/videos/2019-06-01.avi')
 
 
 def get_image(save=True):

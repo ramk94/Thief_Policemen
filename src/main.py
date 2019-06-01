@@ -42,7 +42,8 @@ class Game:
         self.strategy = Strategy()
 
         # construct the control system
-        self.controller = Controller(detector, robots_config_path)
+        self.controller = Controller(self.detector, robots_config_path)
+        self.controller.connect()
 
     def is_over(self):
         """

@@ -11,7 +11,7 @@ class FakeRobot(object):
     def get_sensor_data(self):
         data = {
             'orientation': {
-                'base': (0, 1),
+                'base': (0, -1),
                 'current': (1, 0)
             }
         }
