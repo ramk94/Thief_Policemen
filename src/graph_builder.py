@@ -17,7 +17,7 @@ class GraphBuilder:
             centers' coordinates of triangles on the gaming board
         """
         self.centers = centers
-        self.center_dict=self.center_info();
+        self.center_dict = self.center_info()
 
     def build(self, object_list):
         """
@@ -58,20 +58,20 @@ class GraphBuilder:
                     "policeman2": 9
                 }
         """
- 
-        sample_graph = [
-                       [0, 0, 1, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 1, 0, 0, 1, 0, 0, 0],
-                       [1, 1, 0, 1, 0, 0, 0, 0, 0],
-                       [0, 0, 1, 0, 0, 0, 0, 1, 0],
-                       [0, 0, 0, 0, 0, 1, 0, 0, 0],
-                       [0, 1, 0, 0, 1, 0, 1, 0, 0],
-                       [0, 0, 0, 0, 0, 1, 0, 1, 0],
-                       [0, 0, 0, 1, 0, 0, 1, 0, 1],
-                       [0, 0, 0, 0, 0, 0, 0, 1, 0]
-                       ]
 
-        self.object_list = object_list;
+        sample_graph = [
+            [0, 0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 1, 0, 0, 0],
+            [1, 1, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 1, 0, 0, 1, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0, 1, 0],
+            [0, 0, 0, 1, 0, 0, 1, 0, 1],
+            [0, 0, 0, 0, 0, 0, 0, 1, 0]
+        ]
+
+        self.object_list = object_list
         graph = np.array(sample_graph, dtype=np.int64)
         num_nodes = len(self.centers)
         assert num_nodes == graph.shape[0] and num_nodes == graph.shape[1]
@@ -80,21 +80,20 @@ class GraphBuilder:
 
         return graph, self.objects_on_graph
 
-    
-    #Function that returns the current center object
-    #Uses euclidian distance formula to make the prediction of the object current location
-    def return_current_center(self,p2,q2):
-        closest = {};
-        smallest = 0;
+    # Function that returns the current center object
+    # Uses euclidian distance formula to make the prediction of the object current location
+    def return_current_center(self, p2, q2):
+        closest = {}
+        smallest = 0
         for center in self.centers:
-            q1 = center[1];
-            p1 = center[0];
-            smallest = math.sqrt((q2-q1)**2 + (p2-p1)**2)
-            closest[smallest] = (p1,q1);
+            q1 = center[1]
+            p1 = center[0]
+            smallest = math.sqrt((q2 - q1) ** 2 + (p2 - p1) ** 2)
+            closest[smallest] = (p1, q1)
 
-        smallest = min(closest.keys());
-		
-        #objects_on_graph = {}
+        smallest = min(closest.keys())
+
+        # objects_on_graph = {}
         ''' Example
         object_list{
                     "thief":{
@@ -109,28 +108,23 @@ class GraphBuilder:
                               }
                    }
         '''
-        return closest[smallest];
+        return closest[smallest]
 
-
-   
-    #From the original center info, put them in dictionary for future lookup
+    # From the original center info, put them in dictionary for future lookup
     def center_info(self):
         center_dict = {}
-        i = 1;
-        for val in self.centers: 
-            center_dict[val] = i;
-            i = i +1;
+        i = 1
+        for val in self.centers:
+            center_dict[val] = i
+            i = i + 1
 
-        return center_dict;
-            
+        return center_dict
 
-    #Function that returns a dictionary of objects that are currently occupying the space
+    # Function that returns a dictionary of objects that are currently occupying the space
     def objects_ongraph(self):
         objects_on_graph = {}
-        for key,value in self.object_list.items():
-            current_val = value["center"];
-            current_center = self.return_current_center(current_val[0],current_val[1]);
-            objects_on_graph[key]=self.center_dict[current_center];
-        return objects_on_graph;
-
-
+        for key, value in self.object_list.items():
+            current_val = value["center"]
+            current_center = self.return_current_center(current_val[0], current_val[1])
+            objects_on_graph[key] = self.center_dict[current_center]
+        return objects_on_graph
