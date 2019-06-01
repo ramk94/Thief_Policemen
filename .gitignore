@@ -2,3 +2,4 @@
 .idea/
 centers.txt
 data/pics/*.png
+*.swp
