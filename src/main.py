@@ -7,6 +7,7 @@ from control_system import Controller
 WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
 NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
 OBJECT_CONFIG_PATH = '../cfg/custom.data'
+ROBOTS_CONFIG_PATH = '../cfg/robots.json'
 
 
 class Game:
@@ -14,7 +15,7 @@ class Game:
     Each game is an instance of class Game.
     """
 
-    def __init__(self, weight_path, network_config_path, object_config_path):
+    def __init__(self, weight_path, network_config_path, object_config_path, robots_config_path):
         """
         Load necessary modules and files.
 
@@ -26,11 +27,13 @@ class Game:
             file path of YOLOv3 network configurations
         """
         # construct the object detector
-        self.detector = Detector(weight_path, network_config_path, object_config_path)
+        self.detector = Detector(
+            weight_path, network_config_path, object_config_path)
 
         # load gaming board image and get centers' coordinates of triangles
         self.gaming_board_image = get_image()
-        self.centers = self.detector.detect_gaming_board(self.gaming_board_image)
+        self.centers = self.detector.detect_gaming_board(
+            self.gaming_board_image)
 
         # construct the graph builder
         self.graph_builder = GraphBuilder(self.centers)
@@ -39,7 +42,7 @@ class Game:
         self.strategy = Strategy()
 
         # construct the control system
-        self.controller = Controller()
+        self.controller = Controller(robots_config_path)
 
     def is_over(self):
         """
@@ -95,7 +98,8 @@ class Game:
 if __name__ == '__main__':
     # construct a game
     input('Press ENTER to start a game:')
-    game = Game(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
+    game = Game(WEIGHT_PATH, NETWORK_CONFIG_PATH,
+                OBJECT_CONFIG_PATH, ROBOTS_CONFIG_PATH)
 
     # keep running until the game is over
     while not game.is_over():

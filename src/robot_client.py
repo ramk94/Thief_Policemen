@@ -4,6 +4,13 @@ import zerorpc
 class Robot:
     """
     Robot class is a high-level abstraction of our real objects, and it has simple interfaces which are easy to manipulate.
+    Examples:
+        robot = Robot(name, ip, port)
+        robot.connect()
+        robot.rotate(85)
+        robot.move_forward(2)
+        data = robot.get_sensor_data()
+        robot.disconnect()
     """
 
     def __init__(self, name, ip, port):
@@ -30,6 +37,22 @@ class Robot:
 
     def disconnect(self):
         self.client.close()
+
+    def get_sensor_data(self):
+        try:
+            data = self.client.get_sensor_data()
+            result = {
+                'flag': True,
+                'data': data
+            }
+        except Exception as e:
+            result = {
+                'flag': False,
+                'message': repr(e)
+            }
+        return result
+
+        return data
 
     def rotate(self, alpha):
         """

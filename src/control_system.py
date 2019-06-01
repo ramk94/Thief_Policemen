@@ -51,9 +51,18 @@ class Controller:
             control signals based on instructions
         """
         if sensor_data is None:
-            sensor_data = self.get_sensor_data()
+            sensor_data = {}
         signals = []
         for key, value in object_list.items():
+
+            # if no available sensor data, call robot function
+            if key not in sensor_data:
+                result = self.get_sensor_data(key)
+                if result['flag']:
+                    sensor_data[key] = result
+                else:
+                    raise Exception('cannot obtain sensor data')
+
             # get orientation information
             orientation = sensor_data[key]['orientation']
 
@@ -105,56 +114,23 @@ class Controller:
                 })
         return signals
 
-    def get_sensor_data(self):
+    def get_sensor_data(self, name):
         """
         Collect senor data from robots.
 
         Returns
         -------
         sensor_data: dict
-            sensor data like orientations(x,y,z)
+            sensor data like orientations(x,y)
             example:
                 sensor_data = {
-                    'thief': {
                         'orientation': {
                             'base': (0, 1),
                             'current': (1, 0)
                         }
-                    },
-                    'policeman1': {
-                        'orientation': {
-                            'base': (0, 1),
-                            'current': (1, 0)
-                        }
-                    },
-                    'policeman2': {
-                        'orientation': {
-                            'base': (0, 1),
-                            'current': (1, 0)
-                        }
-                    }
-                }
         """
-        sensor_data = {
-            'thief': {
-                'orientation': {
-                    'base': (0, 1),
-                    'current': (1, 0)
-                }
-            },
-            'policeman1': {
-                'orientation': {
-                    'base': (0, 1),
-                    'current': (1, 0)
-                }
-            },
-            'policeman2': {
-                'orientation': {
-                    'base': (0, 1),
-                    'current': (1, 0)
-                }
-            }
-        }
+        robot = self.robots[name]
+        sensor_data = robot.get_sensor_data()
         return sensor_data
 
     def move_robots(self, control_signals):
