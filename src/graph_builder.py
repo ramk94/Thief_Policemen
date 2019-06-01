@@ -58,8 +58,13 @@ class GraphBuilder:
                     "policeman2": 9
                 }
         """
-
-        sample_graph = [
+        graph_4 = [
+            [0, 0, 1, 0],
+            [0, 0, 1, 0],
+            [1, 1, 0, 1],
+            [0, 0, 1, 0]
+        ]
+        graph_9 = [
             [0, 0, 1, 0, 0, 0, 0, 0, 0],
             [0, 0, 1, 0, 0, 1, 0, 0, 0],
             [1, 1, 0, 1, 0, 0, 0, 0, 0],
@@ -70,10 +75,16 @@ class GraphBuilder:
             [0, 0, 0, 1, 0, 0, 1, 0, 1],
             [0, 0, 0, 0, 0, 0, 0, 1, 0]
         ]
+        num_nodes = len(self.centers)
+        if num_nodes == 4:
+            sample_graph = graph_4
+        elif num_nodes == 9:
+            sample_graph = graph_9
+        else:
+            raise Exception('wrong center number {}'.format(num_nodes))
 
         self.object_list = object_list
         graph = np.array(sample_graph, dtype=np.int64)
-        num_nodes = len(self.centers)
         assert num_nodes == graph.shape[0] and num_nodes == graph.shape[1]
 
         self.objects_on_graph = self.objects_ongraph()

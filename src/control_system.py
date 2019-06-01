@@ -2,7 +2,6 @@ import numpy as np
 import logging
 from robot_client import Robot
 import json
-from camera_system import get_image
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class Controller:
     Control system is the most important part of our project.
     """
 
-    def __init__(self, detector, robots_config_path=None):
+    def __init__(self, detector, get_image, robots_config_path=None):
         """
         Construct controller by a robot config file.
 
@@ -49,7 +48,9 @@ class Controller:
         robots_config_path: str
             file path of robots config file
         """
+        self.object_list = {}
         self.detector = detector
+        self.get_image = get_image
         self.sensors = {}
         self.robots = {}
         if robots_config_path:
@@ -100,8 +101,8 @@ class Controller:
             # if no available sensor data, call robot function
             if key not in sensor_data:
                 result = self.get_sensor_data(key)
-                if result['flag']:
-                    sensor_data[key] = result['data']
+                if result is not None:
+                    sensor_data[key] = result
                 else:
                     raise Exception('cannot obtain sensor data')
 
@@ -161,7 +162,7 @@ class Controller:
         """
         robot = self.robots[name]
         sensor_data = robot.get_sensor_data()
-        if sensor_data is None:
+        if 'data' not in sensor_data or sensor_data['data'] is None:
             if name not in self.sensors:
                 sensor_data = self.get_orientation_by_camera(name)
             else:
@@ -176,8 +177,8 @@ class Controller:
         # get previous location
         object_list = {}
         while name not in object_list:
-            image = get_image()
-            object_list = detector.detect_objects(image)
+            image = self.get_image()
+            object_list = self.detector.detect_objects(image)
         previous_center = object_list[name]['center']
         previous_center_vector = np.array(previous_center).reshape((-1, 1))
 
@@ -187,8 +188,8 @@ class Controller:
         # get current location
         object_list = {}
         while name not in object_list:
-            image = get_image()
-            object_list = detector.detect_objects(image)
+            image = self.get_image()
+            object_list = self.detector.detect_objects(image)
         current_center = object_list[name]['center']
         current_center_vector = np.array(current_center).reshape((-1, 1))
 
@@ -198,11 +199,23 @@ class Controller:
         # construct result
         result = {
             'orientation': {
-                'base': (0, 1),
+                'base': (0, -1),
                 'current': (direction[0], direction[1])
             }
         }
         return result
+
+    def update_state(self, object_list):
+        if self.object_list == {}:
+            self.object_list = object_list
+        else:
+            previous_object_list = self.object_list
+            self.object_list = object_list
+            post_object_list = object_list
+            for name in object_list.keys():
+                self.sensors[name]['orientation']['current'] = (
+                    post_object_list[name]['center'][0] - previous_object_list[name]['center'][0],
+                    post_object_list[name]['center'][1] - previous_object_list[name]['center'][1])
 
     def move_robots(self, control_signals):
         """
@@ -223,6 +236,8 @@ class Controller:
                 result = robot.rotate(param)
             elif command_type == 'move':
                 result = robot.move_forward(param)
+
+
             else:
                 message = 'invalid robot command type: {}'.format(command_type)
                 raise Exception(message)

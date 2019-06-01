@@ -52,8 +52,6 @@ class Robot:
             }
         return result
 
-        return data
-
     def rotate(self, alpha):
         """
         Rotate the robot with alpha degree clockwisely.
@@ -108,6 +106,7 @@ class Robot:
 
 
 if __name__ == '__main__':
-    robot_client = Robot('thief', '192.168.1.106', 4242)
-    robot_client.rotate(-253)
-    robot_client.move_forward(4)
+    robot_client = Robot('thief', '192.168.31.254', 4242)
+    robot_client.connect()
+    robot_client.move_forward(1)
+    # robot_client.rotate(-120)

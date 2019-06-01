@@ -15,6 +15,7 @@ class FakeRobot(object):
                 'current': (1, 0)
             }
         }
+        data = None
         return data
 
 

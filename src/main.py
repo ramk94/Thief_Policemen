@@ -3,11 +3,20 @@ from object_detector import Detector
 from strategy import Strategy
 from graph_builder import GraphBuilder
 from control_system import Controller
+import logging
+import sys
 
 WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
 NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
 OBJECT_CONFIG_PATH = '../cfg/custom.data'
 ROBOTS_CONFIG_PATH = '../cfg/robots.json'
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
+
 
 
 class Game:
@@ -42,7 +51,7 @@ class Game:
         self.strategy = Strategy()
 
         # construct the control system
-        self.controller = Controller(self.detector, robots_config_path)
+        self.controller = Controller(self.detector, get_image, robots_config_path)
         self.controller.connect()
 
     def is_over(self):
@@ -70,18 +79,28 @@ class Game:
 
         # generate instructions based on the graph
         instructions = self.strategy.get_next_steps(graph, objects_on_graph)
-
+        logger.info('instructions:{}'.format(instructions))
         # move robots until they reach the right positions
         while not self.controller.is_finished(self.centers, object_list, instructions):
+            # obtain feedback from camera
+            image = get_image(save=True)
+            object_list = self.detector.detect_objects(image)
+
             # calculate control signals
             control_signals = self.controller.calculate_control_signals(
                 self.centers, object_list, instructions)
+            # update internal states
+            self.controller.update_state(object_list)
+
             # move robots
             self.controller.move_robots(control_signals)
 
             # obtain feedback from camera
-            image = get_image(save=False)
+            image = get_image(save=True)
             object_list = self.detector.detect_objects(image)
+
+            # update internal states
+            self.controller.update_state(object_list)
 
     def get_report(self):
         """
@@ -104,7 +123,7 @@ if __name__ == '__main__':
 
     # keep running until the game is over
     while not game.is_over():
-        input('Press ENTER to the next game step:')
+        # input('Press ENTER to the next game step:')
         game.forward()
 
     # obtain and print the game report
