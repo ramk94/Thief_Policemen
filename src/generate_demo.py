@@ -1,9 +1,9 @@
 from object_detector import Detector
 import cv2
 
-cap = cv2.VideoCapture('../data/videos/2019-06-02.MOV')
+cap = cv2.VideoCapture('../data/videos/2019-06-01.avi')
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('../data/videos/output.avi', fourcc, 30.0, (1024, 768))
+out = cv2.VideoWriter('../data/videos/2019-06-01-labeled.avi', fourcc, 30.0, (1024, 768))
 WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
 NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
 OBJECT_CONFIG_PATH = '../cfg/custom.data'
