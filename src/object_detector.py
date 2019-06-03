@@ -2,6 +2,7 @@ import darknet as dn
 import logging
 import cv2
 import os
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ class Detector:
         self.meta = dn.load_meta(object_config_path.encode('utf-8'))
         self.width = dn.network_width(self.net)
         self.height = dn.network_height(self.net)
+        self.policemen = {}
 
     def detect_objects(self, image):
         """
@@ -71,26 +73,60 @@ class Detector:
         """
         im = self.convert_image(image)
         results = dn.detect_image(self.net, self.meta, im)
+        results = [[result[0].decode('utf-8'), result[1], result[2]] for result in results]
+        object_list = self.track_objects(results)
+
+        if len(object_list) < 3:
+            logger.warning(
+                'Only {} objects are recognized'.format(len(object_list)))
+        return object_list
+
+    def track_objects(self, detect_results):
+        policemen = {}
         object_list = {}
-        police_id = 1
-        for result in results:
-            name = result[0].decode('utf-8')
+        for result in detect_results:
+            name = result[0]
             confidence = result[1]
             bounds = result[2]
             center = (bounds[0] / self.width, bounds[1] / self.height)
             size = (bounds[2] / self.width, bounds[3] / self.height)
-            if name == 'policeman':
+            if name == 'policeman' and len(self.policemen) == 0:
+                police_id = input("Please input a police id for object at {}".format(center))
                 name = '{0}{1}'.format('policeman', police_id)
-                police_id += 1
+                policemen[name] = {
+                    'confidence': confidence,
+                    'center': center,
+                    'size': size
+                }
+            elif name == 'policeman' and len(self.policemen) != 0:
+                name = self.get_police_name_by_distance(center)
+                policemen[name] = {
+                    'confidence': confidence,
+                    'center': center,
+                    'size': size
+                }
             object_list[name] = {
                 'confidence': confidence,
                 'center': center,
                 'size': size
             }
-        if len(object_list) < 3:
-            logger.warning(
-                'Only {} objects are recognized'.format(len(object_list)))
+        for key, value in policemen.items():
+            self.policemen[key] = value
+        for name, policeman in policemen.items():
+            object_list[name] = policeman
         return object_list
+
+    def get_police_name_by_distance(self, center):
+        names = []
+        distances = []
+        for police_name, police in self.policemen.items():
+            names.append(police_name)
+            current_center = np.array(police['center']).reshape((-1, 1))
+            future_center = np.array(center).reshape((-1, 1))
+            distances.append(np.linalg.norm(future_center - current_center))
+        index = np.argmin(distances)
+        name = names[int(index)]
+        return name
 
     def detect_gaming_board(self, image):
         """
