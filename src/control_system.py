@@ -183,7 +183,7 @@ class Controller:
         previous_center_vector = np.array(previous_center).reshape((-1, 1))
 
         # slightly move the robot
-        robot.move_forward(3)
+        robot.move_forward(2)
 
         # get current location
         object_list = {}

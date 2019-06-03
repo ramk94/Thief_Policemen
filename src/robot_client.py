@@ -106,7 +106,7 @@ class Robot:
 
 
 if __name__ == '__main__':
-    robot_client = Robot('thief', '192.168.31.156', 4242)
+    robot_client = Robot('thief', '192.168.31.109', 4242)
     robot_client.connect()
     robot_client.move_forward(1)
-    # robot_client.rotate(-120)
+    # robot_client.rotate(-60)

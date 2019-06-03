@@ -34,6 +34,8 @@ class Game:
         config_path: str
             file path of YOLOv3 network configurations
         """
+        self.orders = ['thief', 'policeman1', 'policeman2']
+
         # construct the object detector
         self.detector = Detector(
             weight_path, network_config_path, object_config_path)
@@ -47,13 +49,13 @@ class Game:
         self.graph_builder = GraphBuilder(self.centers)
 
         # construct the strategy module
-        self.strategy = Strategy()
+        self.strategy = Strategy(self.orders)
 
         # construct the control system
         self.controller = Controller(self.detector, get_image, robots_config_path)
         self.controller.connect()
 
-        self.orders = ['thief', 'policeman1', 'policeman2']
+
 
     def is_over(self):
         """
