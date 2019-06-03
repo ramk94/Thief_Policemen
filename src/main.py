@@ -18,7 +18,6 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-
 class Game:
     """
     Each game is an instance of class Game.
@@ -53,6 +52,8 @@ class Game:
         # construct the control system
         self.controller = Controller(self.detector, get_image, robots_config_path)
         self.controller.connect()
+
+        self.orders = ['thief', 'policeman1', 'policeman2']
 
     def is_over(self):
         """
@@ -89,11 +90,21 @@ class Game:
             # calculate control signals
             control_signals = self.controller.calculate_control_signals(
                 self.centers, object_list, instructions)
+
+            # cut extra signals
+            real_signals = []
+            for name in self.orders:
+                for signal in control_signals:
+                    if signal['name'] == name:
+                        real_signals.append(signal)
+                if len(real_signals) > 0:
+                    break
+
             # update internal states
             self.controller.update_state(object_list)
 
             # move robots
-            self.controller.move_robots(control_signals)
+            self.controller.move_robots(real_signals)
 
             # obtain feedback from camera
             image = get_image(save=True)

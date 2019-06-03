@@ -236,8 +236,6 @@ class Controller:
                 result = robot.rotate(param)
             elif command_type == 'move':
                 result = robot.move_forward(param)
-
-
             else:
                 message = 'invalid robot command type: {}'.format(command_type)
                 raise Exception(message)
