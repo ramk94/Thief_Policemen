@@ -10,6 +10,9 @@ class Strategy:
     def __init__(self, orders):
         self.orders = orders
 
+    def get_next_step2_2(self, graph, objects_on_graph):
+        pass
+
     def get_next_steps(self, graph, objects_on_graph):
         """
         Make decisions for robots.
