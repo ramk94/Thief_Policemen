@@ -5,6 +5,7 @@ from graph_builder import GraphBuilder
 from control_system import Controller
 import logging
 import sys
+import time
 
 WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
 NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
@@ -16,6 +17,103 @@ logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
+
+
+class FakeGame:
+    def __init__(self):
+        self.camera = Camera(None, draw=False)
+        self.display_camera = Camera(None, window_name='labeled')
+        centers = []
+        with open('centers.txt', encoding='utf-8', mode='r') as file:
+            for line in file:
+                center = tuple(map(float, line.strip().split(' ')))
+                centers.append(center)
+        self.centers = centers
+        self.graph_builder = GraphBuilder(self.centers)
+        self.orders = ['thief', 'policeman1', 'policeman2']
+        self.strategy = Strategy(self.orders)
+        self.object_list = {
+            "thief": {
+                "confidence": 0.99,
+                "center": self.centers[6],  # (width,height)
+                "size": (0.15, 0.10),  # (width,height)
+            },
+            "policeman1": {
+                "confidence": 0.99,
+                "center": self.centers[1],  # (width,height)
+                "size": (0.15, 0.05),  # (width,height)
+            },
+            "policeman2": {
+                "confidence": 0.99,
+                "center": self.centers[3],  # (width,height)
+                "size": (0.15, 0.05),  # (width,height)
+            }
+        }
+        self.counter = 0
+        self.thief_movements = [13, 14, 15, 16]
+        self.graph = None
+        self.objects_on_graph = None
+        self.instructions = None
+
+    def forward(self):
+
+        image = self.camera.get_fake_gaming_board()
+        self.display_camera.draw_boxes(image, self.object_list)
+        self.display_camera.display(image)
+
+        # build a graph based on object list
+        graph, objects_on_graph = self.graph_builder.build(self.object_list)
+
+        self.graph = graph
+        self.objects_on_graph = objects_on_graph
+
+        # generate instructions based on the graph
+        instructions = self.strategy.get_next_step2_2(graph, objects_on_graph)
+        logger.info('instructions:{}'.format(instructions))
+
+        instructions['thief'] = [objects_on_graph['thief'], self.thief_movements[self.counter]]
+        self.instructions = instructions
+
+        self.counter += 1
+        for key, value in instructions.items():
+            self.object_list[key]['center'] = self.centers[value[1] - 1]
+        time.sleep(1)
+
+        image = self.camera.get_fake_gaming_board()
+        self.display_camera.draw_boxes(image, self.object_list)
+        self.display_camera.display(image)
+
+    def is_over(self):
+        """
+        Check if the game is over.
+
+        Returns
+        -------
+        game_over: bool
+            True if the thief is at the escape point or the policemen have caught the thief, otherwise False.
+        """
+        game_over = False
+        if self.instructions is not None:
+            thief_future = self.instructions['thief'][1]
+            for key, instruction in self.instructions.items():
+                if key != 'thief':
+                    if instruction[1] == thief_future:
+                        game_over = True
+        # if self.counter == len(self.thief_movements):
+        #     game_over = True
+        return game_over
+
+    def get_report(self):
+        """
+        Generate a game report(json, xml or plain text).
+
+        Returns
+        -------
+        game_report: object or str
+            a detailed record of the game
+        """
+        game_report = None
+        return game_report
 
 
 class Game:
@@ -87,7 +185,7 @@ class Game:
         # move robots until they reach the right positions
         while not self.controller.is_finished(self.centers, object_list, instructions):
             # obtain feedback from camera
-            image = self.camera.get_image(save=True)
+            image = self.camera.get_image()
             object_list = self.detector.detect_objects(image)
 
             # calculate control signals
@@ -131,16 +229,15 @@ class Game:
 
 if __name__ == '__main__':
     # construct a game
-    input('Press ENTER to start a game:')
-    game = Game(WEIGHT_PATH, NETWORK_CONFIG_PATH,
-                OBJECT_CONFIG_PATH, ROBOTS_CONFIG_PATH)
-
+    # input('Press ENTER to start a game:')
+    # game = Game(WEIGHT_PATH, NETWORK_CONFIG_PATH,
+    #             OBJECT_CONFIG_PATH, ROBOTS_CONFIG_PATH)
+    game = FakeGame()
     # keep running until the game is over
     while not game.is_over():
-        # input('Press ENTER to the next game step:')
+        input('Press ENTER to the next game step:')
         game.forward()
 
     # obtain and print the game report
-    input('The game is over. Press ENTER to the print a game report:')
     report = game.get_report()
     print(report)

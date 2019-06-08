@@ -13,6 +13,11 @@ LINE_TYPE = 2
 
 
 class Camera:
+    @staticmethod
+    def get_fake_gaming_board():
+        frame = cv2.imread('../resources/gaming_board.jpg')
+        return frame
+
     def __init__(self, camera_id=0, draw=True, save=True, save_path='../data/pics', num_skip=10, window_name='main'):
         self.draw = draw
         self.save = save

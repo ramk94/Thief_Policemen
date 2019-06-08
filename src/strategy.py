@@ -13,7 +13,7 @@ class Strategy:
 
     def __init__(self, orders):
         self.orders = orders
-        self.fixed = ['policeman1', 'policeman2']
+        self.fixed = []
 
     def get_next_step2_2(self, graph, objects_on_graph):
         instructions = {}
