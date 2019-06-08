@@ -2,7 +2,10 @@ import numpy as np
 import random
 from collections import defaultdict
 from heapq import *
+
 inf = 999999  # inf
+
+
 class Strategy:
     """
     Strategy module which make decisions for robots' future movements.
@@ -13,16 +16,36 @@ class Strategy:
 
     def get_next_step2_2(self, graph, objects_on_graph):
         instructions = {}
-        current_objects_on_graph = objects_on_graph.copy()
-        current_graph_police1 = graph
-        current_graph_police1[objects_on_graph['policeman1'] - 1][objects_on_graph['policeman2'] - 1] = inf
-        current_graph_police1[objects_on_graph['policeman2'] - 1][objects_on_graph['policeman1'] - 1] = inf
-        path_p1 = self.dijkstra(graph, objects_on_graph['policeman1'] - 1, objects_on_graph['thief'] - 1)
-        path_p2 = self.dijkstra(graph, objects_on_graph['policeman2'] - 1, objects_on_graph['thief'] - 1)
 
-        instructions['policeman1'] = [current_objects_on_graph['policeman1'], path_p1[1] + 1]
-        instructions['policeman2'] = [current_objects_on_graph['policeman2'], path_p2[1] + 1]
+        current_objects_on_graph = objects_on_graph.copy()
+
+        current_graph_police1 = graph.copy()
+        current_graph_police1[current_objects_on_graph['policeman1'] - 1][
+            current_objects_on_graph['policeman2'] - 1] = inf
+        path_p1 = self.dijkstra(current_graph_police1, current_objects_on_graph['policeman1'] - 1,
+                                current_objects_on_graph['thief'] - 1)
+        if len(path_p1) >= 2:
+            instructions['policeman1'] = [current_objects_on_graph['policeman1'], path_p1[1] + 1]
+        else:
+            instructions['policeman1'] = [current_objects_on_graph['policeman1'],
+                                          current_objects_on_graph['policeman1']]
+        current_objects_on_graph['policeman1'] = instructions['policeman1'][1]
+
+        current_graph_police2 = graph.copy()
+        current_graph_police2[current_objects_on_graph['policeman2'] - 1][
+            current_objects_on_graph['policeman1'] - 1] = inf
+        path_p2 = self.dijkstra(current_graph_police2, current_objects_on_graph['policeman2'] - 1,
+                                current_objects_on_graph['thief'] - 1)
+        if len(path_p2) >= 2:
+            instructions['policeman2'] = [current_objects_on_graph['policeman2'], path_p2[1] + 1]
+        else:
+            instructions['policeman2'] = [current_objects_on_graph['policeman2'],
+                                          current_objects_on_graph['policeman2']]
+
+        current_objects_on_graph['policeman2'] = instructions['policeman2'][1]
+
         return instructions
+
     def get_next_steps(self, graph, objects_on_graph):
         """
         Make decisions for robots.
@@ -98,36 +121,41 @@ class Strategy:
             ret_path.reverse()
         return ret_path
 
+
 if __name__ == '__main__':
     example = [
-        [0, 0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 1, 0, 0, 0],
-        [1, 1, 0, 1, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0, 0],
-        [0, 1, 0, 0, 1, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 1, 0, 1, 0],
-        [0, 0, 0, 1, 0, 0, 1, 0, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1, 0]
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]
     ]
-    #example = [
-    #    [0, 0, 1, 0],
-    #    [0, 0, 1, 0],
-    #    [1, 1, 0, 1],
-    #    [0, 0, 1, 0]
-    #]
 
     graph = np.array(example, dtype=np.int64)
 
-
-
-    objects_on_graph = {
-        'thief'     : 9,
-        'policeman1': 2,
-        'policeman2': 3
-    }
+    thief_path = [13, 14, 15, 16]
     S1 = Strategy(['thief', 'policeman1', 'policeman2'])
-    print(S1.get_next_steps(graph, objects_on_graph))
-
-
-    print(S1.get_next_step2_2(graph, objects_on_graph))
+    objects_on_graph = {
+        'thief': 7,
+        'policeman1': 2,
+        'policeman2': 4
+    }
+    instructions = S1.get_next_step2_2(graph, objects_on_graph)
+    print(instructions)
+    for thief_step in thief_path:
+        objects_on_graph['policeman1'] = instructions['policeman1'][1]
+        objects_on_graph['policeman2'] = instructions['policeman2'][1]
+        objects_on_graph['thief'] = thief_step
+        instructions = S1.get_next_step2_2(graph, objects_on_graph)
+        print(instructions)
