@@ -2,7 +2,6 @@ import cv2
 import uuid
 import os
 
-cap = cv2.VideoCapture(0)
 COLORS = {
     'thief': (255, 0, 0),
     'policeman1': (0, 255, 0),
@@ -82,27 +81,3 @@ class Camera:
     def rgb_to_bgr(frame):
         image = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         return image
-
-
-def get_image(save=True, save_path='../data/pics'):
-    """
-    Capture an image from our camera.
-
-    Returns
-    ----------
-    image: numpy array
-        a three-dimensional numpy array which indicates an image, and the shape of this array is (height,width,channels). For example, if an image has height 512, width 384, then the array's shape should be (512,384,3). Note that the color order should be RGB, and the left-top corner of the image represents coordinate (0,0).
-    """
-
-    # drop previous images to avoid duplication
-    for i in range(10):
-        cap.read()
-    #
-    flag, frame = cap.read()
-    if flag:
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    else:
-        image = None
-    if image is not None and save:
-        cv2.imwrite(os.path.join(save_path, '{}.jpg'.format(uuid.uuid1())), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-    return image

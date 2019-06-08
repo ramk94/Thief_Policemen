@@ -1,4 +1,4 @@
-from camera_system import get_image
+from camera_system import Camera
 from object_detector import Detector
 from strategy import Strategy
 from graph_builder import GraphBuilder
@@ -36,12 +36,15 @@ class Game:
         """
         self.orders = ['thief', 'policeman1', 'policeman2']
 
+        # construct the camera system
+        self.camera = Camera()
+
         # construct the object detector
         self.detector = Detector(
             weight_path, network_config_path, object_config_path)
 
         # load gaming board image and get centers' coordinates of triangles
-        self.gaming_board_image = get_image()
+        self.gaming_board_image = self.camera.get_image()
         self.centers = self.detector.detect_gaming_board(
             self.gaming_board_image)
 
@@ -52,10 +55,8 @@ class Game:
         self.strategy = Strategy(self.orders)
 
         # construct the control system
-        self.controller = Controller(self.detector, get_image, robots_config_path)
+        self.controller = Controller(self.detector, self.camera.get_image, robots_config_path)
         self.controller.connect()
-
-
 
     def is_over(self):
         """
@@ -74,7 +75,7 @@ class Game:
         Push the game to the next step.
         """
         # get objects' coordinates and categories
-        image = get_image()
+        image = self.camera.get_image()
         object_list = self.detector.detect_objects(image)
 
         # build a graph based on object list
@@ -86,7 +87,7 @@ class Game:
         # move robots until they reach the right positions
         while not self.controller.is_finished(self.centers, object_list, instructions):
             # obtain feedback from camera
-            image = get_image(save=True)
+            image = self.camera.get_image(save=True)
             object_list = self.detector.detect_objects(image)
 
             # calculate control signals
@@ -109,7 +110,7 @@ class Game:
             self.controller.move_robots(real_signals)
 
             # obtain feedback from camera
-            image = get_image(save=True)
+            image = self.camera.get_image(save=True)
             object_list = self.detector.detect_objects(image)
 
             # update internal states

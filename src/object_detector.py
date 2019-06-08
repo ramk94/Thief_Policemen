@@ -203,30 +203,25 @@ class Detector:
 
 
 if __name__ == '__main__':
-    from camera_system import get_image
+    from camera_system import Camera
 
-    WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
-    NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
-    OBJECT_CONFIG_PATH = '../cfg/custom.data'
-    detector = Detector(WEIGHT_PATH, NETWORK_CONFIG_PATH, OBJECT_CONFIG_PATH)
+    weight_path = '../model/custom_tiny_yolov3.weights'
+    network_config_path = '../cfg/custom-tiny.cfg'
+    object_config_path = '../cfg/custom.data'
+    detector = Detector(weight_path, network_config_path, object_config_path, auto_id=True)
+    camera = Camera(save=False, draw=False, num_skip=0)
 
     window_name = 'test'
     cv2.namedWindow(window_name)
+
     while True:
-        image = get_image(save=False)
+        image = camera.get_image()
         if image is None:
             break
-        else:
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        image = camera.rgb_to_bgr(image)
         object_list = detector.detect_objects(image)
-        print(object_list)
-        if len(object_list) > 0:
-            for key, value in object_list.items():
-                height, width = image.shape[0], image.shape[1]
-                x = int(value['center'][0] * width)
-                y = int(value['center'][1] * height)
-                cv2.circle(image, (x, y), 10, (255, 0, 0), -1)
-        cv2.imshow(window_name, image)
+        boxes = camera.draw_boxes(image, object_list)
+        cv2.imshow(window_name, boxes)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cv2.destroyWindow(window_name)
