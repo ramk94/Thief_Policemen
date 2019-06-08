@@ -13,6 +13,7 @@ class Strategy:
 
     def __init__(self, orders):
         self.orders = orders
+        self.fixed = ['policeman1', 'policeman2']
 
     def get_next_step2_2(self, graph, objects_on_graph):
         instructions = {}
@@ -82,6 +83,9 @@ class Strategy:
                     next_step = random.choice(choices)
                     instructions[name] = [current_objects_on_graph[name], next_step + 1]
                     current_objects_on_graph[name] = next_step + 1
+        for name in self.fixed:
+            if name in instructions:
+                instructions[name][1] = instructions[name][0]
         return instructions
 
     def dijkstra_raw(self, edges, from_node, to_node):

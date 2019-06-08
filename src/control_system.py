@@ -308,7 +308,7 @@ if __name__ == '__main__':
         obj_list = {}
         img = None
         while len(obj_list) == 0:
-            img = get_image(save=False)
+            img = get_image()
             obj_list = detector.detect_objects(img)
             for kk, oo in object_list.items():
                 hh, ww = img.shape[0], img.shape[1]
@@ -366,7 +366,7 @@ if __name__ == '__main__':
 
         object_list = []
         while len(object_list) == 0:
-            image = get_image(save=False)
+            image = get_image()
             object_list = detector.detect_objects(image)
         print(object_list)
         vector_current = np.array(
