@@ -3,7 +3,7 @@ from camera_system import Camera
 from object_detector import Detector
 
 
-class TestCameraSystem(unittest.TestCase):
+class TestObjectDetector(unittest.TestCase):
 
     def test_object_boxes(self):
         camera_raw = Camera('../data/videos/2019-06-01.avi', save=False, num_skip=0, draw=False)
