@@ -29,7 +29,7 @@ class Detector:
     Object detector based on YOLO network.
     """
 
-    def __init__(self, weight_path, network_config_path, object_config_path):
+    def __init__(self, weight_path, network_config_path, object_config_path, auto_id=False):
         """
         Load YOLO network weights and config files
 
@@ -48,6 +48,8 @@ class Detector:
         self.width = dn.network_width(self.net)
         self.height = dn.network_height(self.net)
         self.policemen = {}
+        self.auto_id = auto_id
+        self.fake_id = 0
 
     def detect_objects(self, image):
         """
@@ -91,7 +93,11 @@ class Detector:
             center = (bounds[0] / self.width, bounds[1] / self.height)
             size = (bounds[2] / self.width, bounds[3] / self.height)
             if name == 'policeman' and len(self.policemen) == 0:
-                police_id = input("Please input a police id for object at {}".format(center))
+                if self.auto_id:
+                    police_id = self.fake_id
+                    self.fake_id += 1
+                else:
+                    police_id = input("Please input a police id for object at {}".format(center))
                 name = '{0}{1}'.format('policeman', police_id)
                 policemen[name] = {
                     'confidence': confidence,
