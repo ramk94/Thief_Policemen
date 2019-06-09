@@ -3,6 +3,7 @@ import logging
 import cv2
 import os
 import numpy as np
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -65,19 +66,13 @@ class Detector:
         object_list: dict
             objects' relative locations, relative sizes and categories
             example:
-            {
-                "thief":{
-                    "confidence":0.99,
-                    "center":(0.16,0.37), # (width,height)
-                    "size":(0.21,0.25), # (width,height)
-                }
-            }
+
         """
         im = self.convert_image(image)
         results = dn.detect_image(self.net, self.meta, im)
         results = [[result[0].decode('utf-8'), result[1], result[2]] for result in results]
         object_list = self.track_objects(results)
-
+        logger.debug('object list: {}'.format(object_list))
         if len(object_list) < 3:
             logger.warning(
                 'Only {} objects are recognized'.format(len(object_list)))
@@ -203,6 +198,10 @@ class Detector:
 
 
 if __name__ == '__main__':
+    logger.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
     from camera_system import Camera
 
     weight_path = '../model/custom_tiny_yolov3.weights'

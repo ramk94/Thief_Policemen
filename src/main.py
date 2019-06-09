@@ -133,7 +133,10 @@ class Game:
             file path of YOLOv3 network configurations
         """
         self.orders = ['thief', 'policeman1', 'policeman2']
-
+        self.graph = None
+        self.objects_on_graph = None
+        self.instructions = None
+        self.escape_nodes = {1, 4}
         # construct the camera system
         self.camera = Camera()
 
@@ -166,6 +169,18 @@ class Game:
             True if the thief is at the escape point or the policemen have caught the thief, otherwise False.
         """
         game_over = False
+        if self.instructions is None or self.objects_on_graph is None or self.graph is None:
+            return game_over
+        if 'thief' in self.objects_on_graph:
+            if self.objects_on_graph['thief'] in self.escape_nodes:
+                game_over = True
+                logger.info('The thief wins!')
+            else:
+                for name, instruction in self.instructions.items():
+                    if name != 'thief':
+                        if self.instructions['thief'][2] == instruction[2]:
+                            game_over = True
+                            logger.info('The policemen win!')
         return game_over
 
     def forward(self):
@@ -178,10 +193,16 @@ class Game:
 
         # build a graph based on object list
         graph, objects_on_graph = self.graph_builder.build(object_list)
+        self.graph = graph
+        self.objects_on_graph = objects_on_graph
 
         # generate instructions based on the graph
         instructions = self.strategy.get_next_steps(graph, objects_on_graph)
+        self.instructions = instructions
         logger.info('instructions:{}'.format(instructions))
+
+        if self.is_over():
+            return
         # move robots until they reach the right positions
         while not self.controller.is_finished(self.centers, object_list, instructions):
             # obtain feedback from camera
@@ -208,7 +229,7 @@ class Game:
             self.controller.move_robots(real_signals)
 
             # obtain feedback from camera
-            image = self.camera.get_image(save=True)
+            image = self.camera.get_image()
             object_list = self.detector.detect_objects(image)
 
             # update internal states
@@ -230,12 +251,12 @@ class Game:
 if __name__ == '__main__':
     # construct a game
     # input('Press ENTER to start a game:')
-    # game = Game(WEIGHT_PATH, NETWORK_CONFIG_PATH,
-    #             OBJECT_CONFIG_PATH, ROBOTS_CONFIG_PATH)
-    game = FakeGame()
+    game = Game(WEIGHT_PATH, NETWORK_CONFIG_PATH,
+                OBJECT_CONFIG_PATH, ROBOTS_CONFIG_PATH)
+    # game = FakeGame()
     # keep running until the game is over
     while not game.is_over():
-        input('Press ENTER to the next game step:')
+        # input('Press ENTER to the next game step:')
         game.forward()
 
     # obtain and print the game report

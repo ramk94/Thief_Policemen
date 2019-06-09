@@ -162,11 +162,13 @@ class Controller:
         """
         robot = self.robots[name]
         sensor_data = robot.get_sensor_data()
-        if 'data' not in sensor_data or sensor_data['data'] is None:
-            if name not in self.sensors:
-                sensor_data = self.get_orientation_by_camera(name)
-            else:
+        if 'data' in sensor_data and sensor_data['data'] is not None:
+            self.sensors[name] = sensor_data
+        else:
+            if name in self.sensors:
                 sensor_data = self.sensors[name]
+            else:
+                sensor_data = self.get_orientation_by_camera(name)
         self.sensors[name] = sensor_data
         return sensor_data
 
