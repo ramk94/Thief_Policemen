@@ -6,6 +6,7 @@ from control_system import Controller
 import logging
 import sys
 import time
+import json
 
 WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
 NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
@@ -13,10 +14,6 @@ OBJECT_CONFIG_PATH = '../cfg/custom.data'
 ROBOTS_CONFIG_PATH = '../cfg/robots.json'
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
-logger.addHandler(handler)
 
 
 class FakeGame:
@@ -248,17 +245,48 @@ class Game:
         return game_report
 
 
-if __name__ == '__main__':
-    # construct a game
-    # input('Press ENTER to start a game:')
-    game = Game(WEIGHT_PATH, NETWORK_CONFIG_PATH,
-                OBJECT_CONFIG_PATH, ROBOTS_CONFIG_PATH)
-    # game = FakeGame()
-    # keep running until the game is over
-    while not game.is_over():
-        # input('Press ENTER to the next game step:')
-        game.forward()
+def main():
+    # set up logger level
+    logger.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
 
-    # obtain and print the game report
-    report = game.get_report()
-    print(report)
+    # parse config file
+    if len(sys.argv) > 1:
+        config_path = sys.argv[1]
+    else:
+        config_path = '../cfg/game_config/json'
+    with open(config_path, encoding='utf-8', mode='r') as file:
+        config = json.load(file)
+
+    # load game parameters
+    weight_path = config['WEIGHT_PATH']
+    network_config_path = config['NETWORK_CONFIG_PATH']
+    object_config_path = config['OBJECT_CONFIG_PATH']
+    robots_config_path = config['ROBOTS_CONFIG_PATH']
+
+    # construct a game logic
+    game = Game(weight_path, network_config_path, object_config_path, robots_config_path)
+
+    # start the game logic
+    while True:
+        input('Press ENTER to the start a game:')
+
+        # keep running until game is over
+        while not game.is_over():
+            game.forward()
+
+        # get the game report
+        report = game.get_report()
+
+        # display the game report
+        print(report)
+
+        # shuffle the robots on the gaming board
+        # TODO: finish shuffle() function
+        game.shuffle()
+
+
+if __name__ == '__main__':
+    main()

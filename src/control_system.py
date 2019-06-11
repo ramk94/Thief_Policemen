@@ -69,7 +69,10 @@ class Controller:
         Connect to robots.
         """
         for key, robot in self.robots.items():
-            robot.connect()
+            try:
+                robot.connect()
+            except:
+                logger.exception('cannot connect to {}'.format(key))
 
     def calculate_control_signals(self, centers, object_list, instructions, sensor_data=None, threshold=0.05):
         """
