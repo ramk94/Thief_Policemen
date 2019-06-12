@@ -1,6 +1,16 @@
+import zerorpc
+
+
 class Robot:
     """
     Robot class is a high-level abstraction of our real objects, and it has simple interfaces which are easy to manipulate.
+    Examples:
+        robot = Robot(name, ip, port)
+        robot.connect()
+        robot.rotate(85)
+        robot.move_forward(2)
+        data = robot.get_sensor_data()
+        robot.disconnect()
     """
 
     def __init__(self, name, ip, port):
@@ -19,6 +29,28 @@ class Robot:
         self.name = name
         self.ip = ip
         self.port = port
+        self.client = zerorpc.Client(heartbeat=None)
+
+    def connect(self):
+        address = 'tcp://{ip}:{port}'.format(ip=self.ip, port=self.port)
+        self.client.connect(address)
+
+    def disconnect(self):
+        self.client.close()
+
+    def get_sensor_data(self):
+        try:
+            data = self.client.get_sensor_data()
+            result = {
+                'flag': True,
+                'data': data
+            }
+        except Exception as e:
+            result = {
+                'flag': False,
+                'message': repr(e)
+            }
+        return result
 
     def rotate(self, alpha):
         """
@@ -34,11 +66,16 @@ class Robot:
         result: dict
             a dict consists of some feedback information
         """
-        result = {
-            'previous_direction': 0,
-            'current_direction': alpha,
-            'flag': True
-        }
+        try:
+            result = {
+                'flag': True
+            }
+            self.client.rotate(int(alpha))
+        except Exception as e:
+            result = {
+                'flag': False,
+                'message': repr(e)
+            }
         return result
 
     def move_forward(self, n):
@@ -55,8 +92,21 @@ class Robot:
         result: dict
             a dict consists of some feedback information
         """
-        result = {
-            'steps': n,
-            'flag': True
-        }
+        try:
+            result = {
+                'flag': True
+            }
+            self.client.move_forward(int(n))
+        except Exception as e:
+            result = {
+                'flag': False,
+                'message': repr(e)
+            }
         return result
+
+
+if __name__ == '__main__':
+    robot_client = Robot('thief', '192.168.31.254', 4242)
+    robot_client.connect()
+    # robot_client.move_forward(-20)
+    robot_client.rotate(-60)

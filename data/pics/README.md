@@ -1,0 +1,1 @@
+# store all images captured from camera

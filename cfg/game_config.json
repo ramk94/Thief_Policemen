@@ -1,0 +1,6 @@
+{
+  "weight_path": "../model/custom_tiny_yolov3.weights",
+  "network_config_path": "../cfg/custom-tiny.cfg",
+  "object_config_path": "../cfg/custom.data",
+  "robots_config_path": "../cfg/robots.json"
+}
