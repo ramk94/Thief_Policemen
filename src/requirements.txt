@@ -2,3 +2,4 @@ imgaug
 Pillow
 numpy
 tflearn
+zerorpc
