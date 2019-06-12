@@ -208,7 +208,7 @@ if __name__ == '__main__':
     network_config_path = '../cfg/custom-tiny.cfg'
     object_config_path = '../cfg/custom.data'
     detector = Detector(weight_path, network_config_path, object_config_path, auto_id=True)
-    camera = Camera(save=False, draw=False, num_skip=0)
+    camera = Camera(1, save=False, draw=False, num_skip=0)
 
     window_name = 'test'
     cv2.namedWindow(window_name)

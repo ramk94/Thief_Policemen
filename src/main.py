@@ -7,6 +7,7 @@ import logging
 import sys
 import time
 import json
+import random
 
 WEIGHT_PATH = '../model/custom_tiny_yolov3.weights'
 NETWORK_CONFIG_PATH = '../cfg/custom-tiny.cfg'
@@ -32,7 +33,7 @@ class FakeGame:
         self.object_list = {
             "thief": {
                 "confidence": 0.99,
-                "center": self.centers[6],  # (width,height)
+                "center": self.centers[2],  # (width,height)
                 "size": (0.15, 0.10),  # (width,height)
             },
             "policeman1": {
@@ -65,10 +66,10 @@ class FakeGame:
         self.objects_on_graph = objects_on_graph
 
         # generate instructions based on the graph
-        instructions = self.strategy.get_next_step2_2(graph, objects_on_graph)
+        instructions = self.strategy.get_next_steps(graph, objects_on_graph)
         logger.info('instructions:{}'.format(instructions))
 
-        instructions['thief'] = [objects_on_graph['thief'], self.thief_movements[self.counter]]
+        # instructions['thief'] = [objects_on_graph['thief'], self.thief_movements[self.counter]]
         self.instructions = instructions
 
         self.counter += 1
@@ -126,25 +127,34 @@ class Game:
         ----------
         weight_path: str
             file path of YOLOv3 network weights
-        config_path: str
+        network_config_path: str
             file path of YOLOv3 network configurations
+        object_config_path: str
+            file path of object information in YOLOv3 network
+        robots_config_path: str
+            file path of robots' remote server configuration
         """
+
+        # fix robot movement order
         self.orders = ['thief', 'policeman1', 'policeman2']
+
+        # initialize internal states
         self.graph = None
         self.objects_on_graph = None
         self.instructions = None
-        self.escape_nodes = {1, 4}
+
+        # set up escape nodes
+        self.escape_nodes = set()
+
         # construct the camera system
-        self.camera = Camera()
+        self.camera = Camera(1)
 
         # construct the object detector
-        self.detector = Detector(
-            weight_path, network_config_path, object_config_path)
+        self.detector = Detector(weight_path, network_config_path, object_config_path)
 
         # load gaming board image and get centers' coordinates of triangles
         self.gaming_board_image = self.camera.get_image()
-        self.centers = self.detector.detect_gaming_board(
-            self.gaming_board_image)
+        self.centers = self.detector.detect_gaming_board(self.gaming_board_image)
 
         # construct the graph builder
         self.graph_builder = GraphBuilder(self.centers)
@@ -154,6 +164,8 @@ class Game:
 
         # construct the control system
         self.controller = Controller(self.detector, self.camera.get_image, robots_config_path)
+
+        # connect to each robot
         self.controller.connect()
 
     def is_over(self):
@@ -175,10 +187,13 @@ class Game:
             else:
                 for name, instruction in self.instructions.items():
                     if name != 'thief':
-                        if self.instructions['thief'][2] == instruction[2]:
+                        if self.instructions['thief'][1] == instruction[1]:
                             game_over = True
                             logger.info('The policemen win!')
         return game_over
+
+    def shuffle(self):
+        random.randint(5,10)
 
     def forward(self):
         """
@@ -256,19 +271,19 @@ def main():
     if len(sys.argv) > 1:
         config_path = sys.argv[1]
     else:
-        config_path = '../cfg/game_config/json'
+        config_path = '../cfg/game_config.json'
     with open(config_path, encoding='utf-8', mode='r') as file:
         config = json.load(file)
 
     # load game parameters
-    weight_path = config['WEIGHT_PATH']
-    network_config_path = config['NETWORK_CONFIG_PATH']
-    object_config_path = config['OBJECT_CONFIG_PATH']
-    robots_config_path = config['ROBOTS_CONFIG_PATH']
+    weight_path = config['weight_path']
+    network_config_path = config['network_config_path']
+    object_config_path = config['object_config_path']
+    robots_config_path = config['robots_config_path']
 
     # construct a game logic
     game = Game(weight_path, network_config_path, object_config_path, robots_config_path)
-
+    # game=FakeGame()
     # start the game logic
     while True:
         input('Press ENTER to the start a game:')

@@ -9,14 +9,14 @@ while (True):
     ret, frame = cap.read()
     if frame is None:
         break
-    if count % 200 == 0:
-        cv2.imwrite('data/pics/{}.jpg'.format(uuid.uuid1()), frame)
+    if count % 50 == 0:
+        cv2.imwrite('../data/pics/output/{}.jpg'.format(uuid.uuid1()), frame)
     count += 1
     # Display the resulting frame
-    # cv2.imshow('frame', frame)
-    # if cv2.waitKey(1) & 0xFF == ord('q'):
-    #     break
+    cv2.imshow('frame', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
 # When everything done, release the capture
 cap.release()
-# cv2.destroyAllWindows()
+cv2.destroyAllWindows()
