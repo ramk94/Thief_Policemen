@@ -87,3 +87,11 @@ class Camera:
     def rgb_to_bgr(frame):
         image = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         return image
+
+
+if __name__ == '__main__':
+    camera = Camera(0, save=False, num_skip=0)
+    while True:
+        image = camera.get_image()
+        image = camera.rgb_to_bgr(image)
+        camera.display(image)
