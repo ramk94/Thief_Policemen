@@ -2,8 +2,16 @@ import numpy as np
 import random
 from collections import defaultdict
 from heapq import *
+import sys
+from gesture_control import GestureControl
+import logging
 
-inf = 999999  # inf
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
+inf = sys.maxsize  # inf
 
 
 class Strategy:
@@ -14,36 +22,102 @@ class Strategy:
     def __init__(self, orders):
         self.orders = orders
         self.fixed = []
+        self.gesture_detector = GestureControl()
 
-    def get_next_step2_2(self, graph, objects_on_graph):
+    @staticmethod
+    def gesture_converter(graph, object_locations, robot, gesture):
+        """
+        Convert a gesture to an instruction on the object graph
+
+        :param graph:
+        :param object_locations:
+        :param robot:
+        :param gesture:
+        :return:
+        """
+        # Palm: left
+        # Fist: right
+        # Swing: bottom
+        # None: stay at the same place
+
+        gestures = ['Palm', 'Fist', 'Swing', 'None']
+        assert gesture in gestures
+        current_location = object_locations[robot]
+        max_nodes = graph.shape[0]
+        level = 1
+        lower_bound = level ** 2 - 2 * level + 2
+        upper_bound = level ** 2
+        while not (current_location >= lower_bound and current_location <= upper_bound):
+            level += 1
+            lower_bound = level ** 2 - 2 * level + 2
+            upper_bound = level ** 2
+        left = current_location - 1
+        right = current_location + 1
+        is_valid = True
+        if lower_bound % 2 == 0:
+            if current_location % 2 == 0:
+                bottom = current_location + level * 2
+            else:
+                bottom = current_location - (level - 1) * 2
+        else:
+            if current_location % 2 == 0:
+                bottom = current_location - (level - 1) * 2
+            else:
+                bottom = current_location + level * 2
+        if gesture == gestures[0]:
+            next_step = left
+            if left < lower_bound:
+                is_valid = False
+        elif gesture == gestures[1]:
+            next_step = right
+            if right > upper_bound:
+                is_valid = False
+        elif gesture == gestures[2]:
+            next_step = bottom
+            if bottom > max_nodes:
+                is_valid = False
+        else:
+            next_step = current_location
+
+        if not is_valid:
+            next_step = current_location
+        return is_valid, next_step
+
+    def get_next_steps_shortest_path(self, graph, objects_on_graph):
+
         instructions = {}
+        object_locations = objects_on_graph.copy()
 
-        current_objects_on_graph = objects_on_graph.copy()
-
-        current_graph_police1 = graph.copy()
-        current_graph_police1[current_objects_on_graph['policeman1'] - 1][
-            current_objects_on_graph['policeman2'] - 1] = inf
-        path_p1 = self.dijkstra(current_graph_police1, current_objects_on_graph['policeman1'] - 1,
-                                current_objects_on_graph['thief'] - 1)
-        if len(path_p1) >= 2:
-            instructions['policeman1'] = [current_objects_on_graph['policeman1'], path_p1[1] + 1]
-        else:
-            instructions['policeman1'] = [current_objects_on_graph['policeman1'],
-                                          current_objects_on_graph['policeman1']]
-        current_objects_on_graph['policeman1'] = instructions['policeman1'][1]
-
-        current_graph_police2 = graph.copy()
-        current_graph_police2[current_objects_on_graph['policeman2'] - 1][
-            current_objects_on_graph['policeman1'] - 1] = inf
-        path_p2 = self.dijkstra(current_graph_police2, current_objects_on_graph['policeman2'] - 1,
-                                current_objects_on_graph['thief'] - 1)
-        if len(path_p2) >= 2:
-            instructions['policeman2'] = [current_objects_on_graph['policeman2'], path_p2[1] + 1]
-        else:
-            instructions['policeman2'] = [current_objects_on_graph['policeman2'],
-                                          current_objects_on_graph['policeman2']]
-
-        current_objects_on_graph['policeman2'] = instructions['policeman2'][1]
+        target = 'thief'
+        chasing_group = set(self.orders)
+        if target in chasing_group:
+            chasing_group.remove(target)
+        for current_robot in self.orders:
+            if current_robot == target:
+                input('Press ENTER to recognize a gesture:')
+                gesture = self.gesture_detector.get_gesture()
+                logger.info('current gesture is {}'.format(gesture))
+                is_valid, instruction = self.gesture_converter(graph, objects_on_graph, target, gesture)
+                counter = 3
+                while not is_valid or counter == 0:
+                    input('Invalid movement. Press ENTER to recognize a gesture again:')
+                    gesture = self.gesture_detector.get_gesture()
+                    logger.info('current gesture is {}'.format(gesture))
+                    is_valid, instruction = self.gesture_converter(graph, objects_on_graph, target, gesture)
+                    counter -= 1
+                if counter == 0:
+                    logger.warning('Tried too many times, stay at the same node.')
+                instructions[target] = [object_locations[target], instruction]
+            else:
+                robot_graph = graph.copy()
+                block_indices = [object_locations[block] - 1 for block in chasing_group.difference({current_robot})]
+                robot_graph[object_locations[current_robot] - 1][block_indices] = inf
+                shortest = self.dijkstra(robot_graph, object_locations[current_robot] - 1, object_locations[target] - 1)
+                if len(shortest) >= 2:
+                    instructions[current_robot] = [object_locations[current_robot], shortest[1] + 1]
+                else:
+                    instructions[current_robot] = [object_locations[current_robot], object_locations[current_robot]]
+                object_locations[current_robot] = instructions[current_robot][1]
 
         return instructions
 
@@ -155,11 +229,12 @@ if __name__ == '__main__':
         'policeman1': 2,
         'policeman2': 4
     }
-    instructions = S1.get_next_step2_2(graph, objects_on_graph)
-    print(instructions)
-    for thief_step in thief_path:
-        objects_on_graph['policeman1'] = instructions['policeman1'][1]
-        objects_on_graph['policeman2'] = instructions['policeman2'][1]
-        objects_on_graph['thief'] = thief_step
-        instructions = S1.get_next_step2_2(graph, objects_on_graph)
+    while True:
+        thief_step = input('Input a gesture: ')
+        valid, thief_next = Strategy.gesture_converter(graph, objects_on_graph, 'thief', thief_step)
+        instructions = S1.get_next_steps_shortest_path(graph, objects_on_graph)
+        instructions['thief'] = [objects_on_graph['thief'], thief_next]
         print(instructions)
+        for p in ['policeman1', 'policeman2']:
+            objects_on_graph[p] = instructions[p][1]
+        objects_on_graph['thief'] = thief_next

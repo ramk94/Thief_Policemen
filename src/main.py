@@ -33,7 +33,7 @@ class FakeGame:
         self.object_list = {
             "thief": {
                 "confidence": 0.99,
-                "center": self.centers[2],  # (width,height)
+                "center": self.centers[6],  # (width,height)
                 "size": (0.15, 0.10),  # (width,height)
             },
             "policeman1": {
@@ -49,6 +49,7 @@ class FakeGame:
         }
         self.counter = 0
         self.thief_movements = [13, 14, 15, 16]
+        self.escape_nodes = {10}
         self.graph = None
         self.objects_on_graph = None
         self.instructions = None
@@ -66,7 +67,7 @@ class FakeGame:
         self.objects_on_graph = objects_on_graph
 
         # generate instructions based on the graph
-        instructions = self.strategy.get_next_steps(graph, objects_on_graph)
+        instructions = self.strategy.get_next_steps_shortest_path(graph, objects_on_graph)
         logger.info('instructions:{}'.format(instructions))
 
         # instructions['thief'] = [objects_on_graph['thief'], self.thief_movements[self.counter]]
@@ -91,14 +92,18 @@ class FakeGame:
             True if the thief is at the escape point or the policemen have caught the thief, otherwise False.
         """
         game_over = False
-        if self.instructions is not None:
-            thief_future = self.instructions['thief'][1]
-            for key, instruction in self.instructions.items():
-                if key != 'thief':
-                    if instruction[1] == thief_future:
-                        game_over = True
-        # if self.counter == len(self.thief_movements):
-        #     game_over = True
+        if self.instructions is None or self.objects_on_graph is None or self.graph is None:
+            return game_over
+        if 'thief' in self.objects_on_graph:
+            if self.objects_on_graph['thief'] in self.escape_nodes:
+                game_over = True
+                logger.info('The thief wins!')
+            else:
+                for name, instruction in self.instructions.items():
+                    if name != 'thief':
+                        if self.instructions['thief'][1] == instruction[1]:
+                            game_over = True
+                            logger.info('The policemen win!')
         return game_over
 
     def get_report(self):
@@ -112,6 +117,9 @@ class FakeGame:
         """
         game_report = None
         return game_report
+
+    def shuffle(self):
+        random.randint(5, 10)
 
 
 class Game:
@@ -193,7 +201,7 @@ class Game:
         return game_over
 
     def shuffle(self):
-        random.randint(5,10)
+        random.randint(5, 10)
 
     def forward(self):
         """
@@ -282,8 +290,8 @@ def main():
     robots_config_path = config['robots_config_path']
 
     # construct a game logic
-    game = Game(weight_path, network_config_path, object_config_path, robots_config_path)
-    # game=FakeGame()
+    # game = Game(weight_path, network_config_path, object_config_path, robots_config_path)
+    game = FakeGame()
     # start the game logic
     while True:
         input('Press ENTER to the start a game:')

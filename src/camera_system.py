@@ -16,6 +16,7 @@ class Camera:
     @staticmethod
     def get_fake_gaming_board():
         frame = cv2.imread('../resources/gaming_board.jpg')
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         return frame
 
     def __init__(self, camera_id=0, draw=True, save=True, save_path='../data/pics', num_skip=10, window_name='main'):
