@@ -41,7 +41,8 @@ class Strategy:
         # None: stay at the same place
 
         gestures = ['Palm', 'Fist', 'Swing', 'None']
-        assert gesture in gestures
+        gestures_fake = ['left', 'right', 'bottom', 'None']
+        assert gesture in gestures or gesture in gestures_fake
         current_location = object_locations[robot]
         max_nodes = graph.shape[0]
         level = 1
@@ -64,15 +65,15 @@ class Strategy:
                 bottom = current_location - (level - 1) * 2
             else:
                 bottom = current_location + level * 2
-        if gesture == gestures[0]:
+        if gesture == gestures[0] or gesture == gestures_fake[0]:
             next_step = left
             if left < lower_bound:
                 is_valid = False
-        elif gesture == gestures[1]:
+        elif gesture == gestures[1] or gesture == gestures_fake[1]:
             next_step = right
             if right > upper_bound:
                 is_valid = False
-        elif gesture == gestures[2]:
+        elif gesture == gestures[2] or gesture == gestures_fake[2]:
             next_step = bottom
             if bottom > max_nodes:
                 is_valid = False
@@ -95,12 +96,15 @@ class Strategy:
         for current_robot in self.orders:
             if current_robot == target:
                 input('Press ENTER to recognize a gesture:')
+                # gesture=input('input a gesture:')
                 gesture = self.gesture_detector.get_gesture()
+                # gesture=input()
                 logger.info('current gesture is {}'.format(gesture))
                 is_valid, instruction = self.gesture_converter(graph, objects_on_graph, target, gesture)
                 counter = 3
                 while not is_valid or counter == 0:
                     input('Invalid movement. Press ENTER to recognize a gesture again:')
+                    # gesture = input('input a gesture:')
                     gesture = self.gesture_detector.get_gesture()
                     logger.info('current gesture is {}'.format(gesture))
                     is_valid, instruction = self.gesture_converter(graph, objects_on_graph, target, gesture)

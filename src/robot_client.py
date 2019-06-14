@@ -108,5 +108,5 @@ class Robot:
 if __name__ == '__main__':
     robot_client = Robot('thief', '192.168.31.254', 4242)
     robot_client.connect()
-    # robot_client.move_forward(-20)
-    robot_client.rotate(-60)
+    # robot_client.move_forward(1)
+    robot_client.rotate(60)

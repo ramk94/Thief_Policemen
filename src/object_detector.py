@@ -4,6 +4,9 @@ import cv2
 import os
 import numpy as np
 import sys
+import zerorpc
+import msgpack
+import msgpack_numpy as m
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +28,68 @@ def draw_circle(event, x, y, flags, param):
         cv2.imshow(window_name, image)
 
 
+class DarkNet:
+    def __init__(self, weight_path, network_config_path, object_config_path):
+        self.net = dn.load_net(network_config_path.encode('utf-8'),
+                               weight_path.encode('utf-8'), 0)
+        self.meta = dn.load_meta(object_config_path.encode('utf-8'))
+        self.width = dn.network_width(self.net)
+        self.height = dn.network_height(self.net)
+
+    def convert_image(self, image):
+        """
+        Convert numpy array to specific format which can be used by darknet library.
+
+        Parameters
+        ----------
+        image: numpy array
+            a three-dimensional array with uint type
+
+        Returns
+        -------
+        im: custom object
+            an object which is defined by darknet library
+        """
+        resized_image = cv2.resize(
+            image, (self.width, self.height), interpolation=cv2.INTER_LINEAR)
+        im, _ = dn.array_to_image(resized_image)
+        return im
+
+    def predict(self, image_pack):
+        """
+        Detect robots and return an object list.
+
+        Parameters
+        ----------
+        image: numpy array
+            an image consists of the gameing board and multiple robots
+
+        Returns
+        -------
+        object_list: dict
+            objects' relative locations, relative sizes and categories
+            example:
+
+        """
+        image = msgpack.unpackb(image_pack, object_hook=m.decode)
+        im = self.convert_image(image)
+        results = dn.detect_image(self.net, self.meta, im)
+        results = [[result[0].decode('utf-8'), result[1], result[2]] for result in results]
+        return results
+
+    def get_width(self):
+        return self.width
+
+    def get_height(self):
+        return self.height
+
+
 class Detector:
     """
     Object detector based on YOLO network.
     """
 
-    def __init__(self, weight_path, network_config_path, object_config_path, auto_id=False):
+    def __init__(self, weight_path, network_config_path, object_config_path, auto_id=False, remote=None):
         """
         Load YOLO network weights and config files
 
@@ -43,11 +102,15 @@ class Detector:
         object_config_path: str
             file path of object configurations
         """
-        self.net = dn.load_net(network_config_path.encode('utf-8'),
-                               weight_path.encode('utf-8'), 0)
-        self.meta = dn.load_meta(object_config_path.encode('utf-8'))
-        self.width = dn.network_width(self.net)
-        self.height = dn.network_height(self.net)
+        if remote is None:
+            self.dark = DarkNet(weight_path, network_config_path, object_config_path)
+        else:
+            self.dark = zerorpc.Client(heartbeat=None)
+            # address = 'tcp://{ip}:{port}'.format(ip=self.ip, port=self.port)
+            self.dark.connect(remote)
+
+        self.width = self.dark.get_width()
+        self.height = self.dark.get_height()
         self.policemen = {}
         self.auto_id = auto_id
         self.fake_id = 0
@@ -68,9 +131,8 @@ class Detector:
             example:
 
         """
-        im = self.convert_image(image)
-        results = dn.detect_image(self.net, self.meta, im)
-        results = [[result[0].decode('utf-8'), result[1], result[2]] for result in results]
+        image_pack = msgpack.packb(image, default=m.encode)
+        results = self.dark.predict(image_pack)
         object_list = self.track_objects(results)
         logger.debug('object list: {}'.format(object_list))
         if len(object_list) < 3:

@@ -144,7 +144,9 @@ class Game:
         """
 
         # fix robot movement order
-        self.orders = ['thief', 'policeman1', 'policeman2']
+        self.orders = ['thief', 'policeman1']
+        # self.orders = ['policeman1', 'policeman2']
+        # self.orders = ['thief', 'policeman1', 'policeman2']
 
         # initialize internal states
         self.graph = None
@@ -217,7 +219,7 @@ class Game:
         self.objects_on_graph = objects_on_graph
 
         # generate instructions based on the graph
-        instructions = self.strategy.get_next_steps(graph, objects_on_graph)
+        instructions = self.strategy.get_next_steps_shortest_path(graph, objects_on_graph)
         self.instructions = instructions
         logger.info('instructions:{}'.format(instructions))
 
@@ -238,6 +240,7 @@ class Game:
             for name in self.orders:
                 for signal in control_signals:
                     if signal['name'] == name:
+                        # if True:
                         real_signals.append(signal)
                 if len(real_signals) > 0:
                     break
@@ -290,8 +293,8 @@ def main():
     robots_config_path = config['robots_config_path']
 
     # construct a game logic
-    # game = Game(weight_path, network_config_path, object_config_path, robots_config_path)
-    game = FakeGame()
+    game = Game(weight_path, network_config_path, object_config_path, robots_config_path)
+    # game = FakeGame()
     # start the game logic
     while True:
         input('Press ENTER to the start a game:')
